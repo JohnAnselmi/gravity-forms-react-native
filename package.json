@@ -1,0 +1,23 @@
+{
+  "name": "gravity-forms-react-native",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "John Anselmi",
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-native": ">=0.60.0"
+  },
+  "dependencies": {
+    "@react-native-picker/picker": "^2.7.7",
+    "axios": "^1.7.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.4",
+    "@types/react-native": "^0.73.0"
+  }
+}
