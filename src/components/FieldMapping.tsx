@@ -21,25 +21,32 @@ const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0
 const websiteRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
 
 // CommonWrapper to standardize the layout for all fields
-const CommonWrapper: FC<{ field: GravityFormField; error?: string; children: ReactNode }> = ({ field, error, children }) => (
+const CommonWrapper: FC<{ field: GravityFormField; error?: string; textColor: string; primaryColor: string; buttonTextColor: string; children: ReactNode }> = ({
+  field,
+  error,
+  textColor,
+  primaryColor,
+  buttonTextColor,
+  children,
+}) => (
   <View style={{ marginBottom: 15 }}>
-    <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
+    <Text style={{ fontWeight: "bold", marginBottom: 5, color: textColor }}>
       {field.label}
       {field.isRequired ? " *" : ""}
     </Text>
     {children}
-    {field.description && <Text style={{ fontSize: 12, color: "gray", marginTop: 3 }}>{field.description}</Text>}
+    {field.description && <Text style={{ fontSize: 12, color: textColor, marginTop: 3 }}>{field.description}</Text>}
     {error && <Text style={{ color: "red", fontSize: 12, marginTop: 3 }}>{error}</Text>}
   </View>
 )
 
 // Render sub-input for multi-input fields (like name, address, etc.)
-const renderSubInput = (input: GravityFormFieldInput, value: any, onChangeText: (text: string) => void, props: any) => {
+const renderSubInput = (input: GravityFormFieldInput, value: any, onChangeText: (text: string) => void, props: any, textColor: string) => {
   if (input.isHidden) return null
   return (
     <TextInput
       key={input.id}
-      style={{ borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 5 }}
+      style={{ borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 5, color: textColor }}
       value={value[input.id] || ""}
       onChangeText={(text) => onChangeText({ ...value, [input.id]: text })}
       placeholder={input.label}
@@ -49,17 +56,17 @@ const renderSubInput = (input: GravityFormFieldInput, value: any, onChangeText: 
 }
 
 export const defaultFieldMapping: FieldMapping = {
-  text: ({ field, value, onChangeText, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
+  text: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => (
+    <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
       <TextInput
-        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5 }}
+        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5, color: textColor }}
         value={value}
         onChangeText={onChangeText}
         {...props}
       />
     </CommonWrapper>
   ),
-  number: ({ field, value, onChangeText, error, ...props }) => {
+  number: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => {
     const [localValue, setLocalValue] = useState(value)
     const [isValid, setIsValid] = useState(true)
     const inputRef = useRef<TextInput>(null)
@@ -82,7 +89,7 @@ export const defaultFieldMapping: FieldMapping = {
     }
 
     return (
-      <CommonWrapper field={field} error={error}>
+      <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
         <TextInput
           ref={inputRef}
           style={{
@@ -90,6 +97,7 @@ export const defaultFieldMapping: FieldMapping = {
             borderColor: error ? "red" : isValid ? "#ccc" : "orange",
             padding: 10,
             borderRadius: 5,
+            color: textColor,
           }}
           value={localValue}
           onChangeText={(text) => {
@@ -133,10 +141,10 @@ export const defaultFieldMapping: FieldMapping = {
       </CommonWrapper>
     )
   },
-  textarea: ({ field, value, onChangeText, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
+  textarea: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => (
+    <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
       <TextInput
-        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5, height: 100 }}
+        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5, height: 100, color: textColor }}
         multiline
         value={value}
         onChangeText={onChangeText}
@@ -144,17 +152,22 @@ export const defaultFieldMapping: FieldMapping = {
       />
     </CommonWrapper>
   ),
-  select: ({ field, value, onValueChange, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
-      <Picker selectedValue={value} onValueChange={onValueChange} style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", borderRadius: 5 }} {...props}>
+  select: ({ field, value, onValueChange, error, textColor, primaryColor, buttonTextColor, ...props }) => (
+    <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
+      <Picker
+        selectedValue={value}
+        onValueChange={onValueChange}
+        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", borderRadius: 5, color: textColor }}
+        {...props}
+      >
         {field.choices?.map((choice: any) => (
-          <Picker.Item label={choice.text} value={choice.value} key={choice.value} />
+          <Picker.Item label={choice.text} value={choice.value} key={choice.value} color={textColor} />
         ))}
       </Picker>
     </CommonWrapper>
   ),
-  checkbox: ({ field, value, onValueChange, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
+  checkbox: ({ field, value, onValueChange, error, textColor, primaryColor, buttonTextColor, ...props }) => (
+    <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
       {field.choices?.map((choice: any) => (
         <View key={choice.value} style={{ flexDirection: "row", alignItems: "center", marginVertical: 5 }}>
           <Switch
@@ -173,6 +186,10 @@ export const defaultFieldMapping: FieldMapping = {
                 }
               }
             }}
+            thumbColor={primaryColor}
+            trackColor={primaryColor}
+            color={textColor}
+            selectedColor={primaryColor}
             {...props}
           />
           <Text style={{ marginLeft: 10 }}>{choice.text}</Text>
@@ -180,8 +197,8 @@ export const defaultFieldMapping: FieldMapping = {
       ))}
     </CommonWrapper>
   ),
-  radio: ({ field, value, onValueChange, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
+  radio: ({ field, value, onValueChange, error, textColor, primaryColor, buttonTextColor, ...props }) => (
+    <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
       {field.choices?.map((choice: any) => (
         <TouchableOpacity
           key={choice.value}
@@ -199,27 +216,27 @@ export const defaultFieldMapping: FieldMapping = {
               justifyContent: "center",
             }}
           >
-            {value === choice.value && <View style={{ height: 10, width: 10, borderRadius: 5, backgroundColor: "blue" }} />}
+            {value === choice.value && <View style={{ height: 10, width: 10, borderRadius: 5, backgroundColor: primaryColor }} />}
           </View>
-          <Text style={{ marginLeft: 10 }}>{choice.text}</Text>
+          <Text style={{ marginLeft: 10, color: textColor }}>{choice.text}</Text>
         </TouchableOpacity>
       ))}
     </CommonWrapper>
   ),
-  name: ({ field, value, onChangeText, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
-      {field.inputs?.map((input: any) => renderSubInput(input, value, onChangeText, props))}
+  name: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => (
+    <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
+      {field.inputs?.map((input: any) => renderSubInput(input, value, onChangeText, props, textColor))}
     </CommonWrapper>
   ),
-  address: ({ field, value, onChangeText, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
-      {field.inputs?.map((input: any) => renderSubInput(input, value, onChangeText, props))}
+  address: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => (
+    <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
+      {field.inputs?.map((input: any) => renderSubInput(input, value, onChangeText, props, textColor))}
     </CommonWrapper>
   ),
-  phone: ({ field, value, onChangeText, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
+  phone: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => (
+    <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
       <TextInput
-        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5 }}
+        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5, color: textColor }}
         value={value}
         onChangeText={onChangeText}
         keyboardType="phone-pad"
@@ -227,7 +244,7 @@ export const defaultFieldMapping: FieldMapping = {
       />
     </CommonWrapper>
   ),
-  email: ({ field, value, onChangeText, error, ...props }) => {
+  email: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => {
     const [isValid, setIsValid] = useState(true)
 
     const validateEmail = (email: string) => {
@@ -237,13 +254,14 @@ export const defaultFieldMapping: FieldMapping = {
     }
 
     return (
-      <CommonWrapper field={field} error={error}>
+      <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
         <TextInput
           style={{
             borderWidth: 1,
             borderColor: error ? "red" : isValid ? "#ccc" : "orange",
             padding: 10,
             borderRadius: 5,
+            color: textColor,
           }}
           value={value}
           onChangeText={(text) => {
@@ -260,7 +278,7 @@ export const defaultFieldMapping: FieldMapping = {
       </CommonWrapper>
     )
   },
-  website: ({ field, value, onChangeText, error, ...props }) => {
+  website: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => {
     const [isValid, setIsValid] = useState(true)
 
     const validateWebsite = (url: string) => {
@@ -270,13 +288,14 @@ export const defaultFieldMapping: FieldMapping = {
     }
 
     return (
-      <CommonWrapper field={field} error={error}>
+      <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
         <TextInput
           style={{
             borderWidth: 1,
             borderColor: error ? "red" : isValid ? "#ccc" : "orange",
             padding: 10,
             borderRadius: 5,
+            color: textColor,
           }}
           value={value}
           onChangeText={(text) => {
