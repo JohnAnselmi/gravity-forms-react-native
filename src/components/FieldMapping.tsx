@@ -27,8 +27,6 @@ const CommonWrapper: FC<{ field: GravityFormField; error?: string; textColor: st
   field,
   error,
   textColor,
-  primaryColor,
-  buttonTextColor,
   children,
 }) => (
   <View style={{ marginBottom: 15 }}>
@@ -146,7 +144,16 @@ export const defaultFieldMapping: FieldMapping = {
   textarea: ({ field, value, onChangeText, error, textColor, primaryColor, buttonTextColor, ...props }) => (
     <CommonWrapper field={field} error={error} textColor={textColor} primaryColor={primaryColor} buttonTextColor={buttonTextColor}>
       <TextInput
-        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5, height: 100, color: textColor }}
+        style={{
+          borderWidth: 1,
+          borderColor: error ? "red" : "#ccc",
+          padding: 10,
+          borderRadius: 5,
+          height: 100,
+          color: textColor,
+          textAlignVertical: "top",
+          paddingTop: 5,
+        }}
         multiline
         value={value}
         onChangeText={onChangeText}
