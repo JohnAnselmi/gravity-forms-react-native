@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react"
+import { FC, ReactNode, useState } from "react"
 import { TextInput, View, Text, Switch, TouchableOpacity } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import { FieldMapping, GravityFormField, GravityFormFieldInput } from "../types"
@@ -16,6 +16,9 @@ import { FieldMapping, GravityFormField, GravityFormFieldInput } from "../types"
 /// MultiSelect
 /// Consent
 /// Signature (Add-On)
+
+const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
+const websiteRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
 
 // CommonWrapper to standardize the layout for all fields
 const CommonWrapper: FC<{ field: GravityFormField; error?: string; children: ReactNode }> = ({ field, error, children }) => (
@@ -198,28 +201,72 @@ export const defaultFieldMapping: FieldMapping = {
       />
     </CommonWrapper>
   ),
-  email: ({ field, value, onChangeText, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
-      <TextInput
-        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5 }}
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType="email-address"
-        {...props}
-      />
-    </CommonWrapper>
-  ),
-  website: ({ field, value, onChangeText, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
-      <TextInput
-        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5 }}
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType="url"
-        {...props}
-      />
-    </CommonWrapper>
-  ),
+  email: ({ field, value, onChangeText, error, ...props }) => {
+    const [isValid, setIsValid] = useState(true)
+
+    const validateEmail = (email: string) => {
+      const isValidEmail = emailRegex.test(email)
+      setIsValid(isValidEmail)
+      return isValidEmail
+    }
+
+    return (
+      <CommonWrapper field={field} error={error}>
+        <TextInput
+          style={{
+            borderWidth: 1,
+            borderColor: error ? "red" : isValid ? "#ccc" : "orange",
+            padding: 10,
+            borderRadius: 5,
+          }}
+          value={value}
+          onChangeText={(text) => {
+            onChangeText(text)
+            validateEmail(text)
+          }}
+          onBlur={() => validateEmail(value)}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          {...props}
+        />
+        {!isValid && <Text style={{ color: "orange", fontSize: 12, marginTop: 3 }}>Please enter a valid email address</Text>}
+      </CommonWrapper>
+    )
+  },
+  website: ({ field, value, onChangeText, error, ...props }) => {
+    const [isValid, setIsValid] = useState(true)
+
+    const validateWebsite = (url: string) => {
+      const isValidUrl = websiteRegex.test(url)
+      setIsValid(isValidUrl)
+      return isValidUrl
+    }
+
+    return (
+      <CommonWrapper field={field} error={error}>
+        <TextInput
+          style={{
+            borderWidth: 1,
+            borderColor: error ? "red" : isValid ? "#ccc" : "orange",
+            padding: 10,
+            borderRadius: 5,
+          }}
+          value={value}
+          onChangeText={(text) => {
+            onChangeText(text)
+            validateWebsite(text)
+          }}
+          onBlur={() => validateWebsite(value)}
+          keyboardType="url"
+          autoCapitalize="none"
+          autoCorrect={false}
+          {...props}
+        />
+        {!isValid && <Text style={{ color: "orange", fontSize: 12, marginTop: 3 }}>Please enter a valid website URL</Text>}
+      </CommonWrapper>
+    )
+  },
 }
 
 // Create a new field mapping object, allowing custom field components to be added
