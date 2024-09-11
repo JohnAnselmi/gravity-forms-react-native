@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState } from "react"
+import { FC, ReactNode, useRef, useState } from "react"
 import { TextInput, View, Text, Switch, TouchableOpacity } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import { FieldMapping, GravityFormField, GravityFormFieldInput } from "../types"
@@ -60,50 +60,76 @@ export const defaultFieldMapping: FieldMapping = {
     </CommonWrapper>
   ),
   number: ({ field, value, onChangeText, error, ...props }) => {
+    const [localValue, setLocalValue] = useState(value)
+    const [isValid, setIsValid] = useState(true)
+    const inputRef = useRef<TextInput>(null)
+
     const min = field.rangeMin !== undefined ? parseFloat(field.rangeMin) : null
     const max = field.rangeMax !== undefined ? parseFloat(field.rangeMax) : null
 
-    const validateNumber = (num: number): number => {
-      if (min !== null && num < min) return min
-      if (max !== null && num > max) return max
-      return num
+    const validateNumber = (text: string) => {
+      const num = parseFloat(text)
+      if (isNaN(num)) {
+        setIsValid(false)
+        return false
+      }
+      if ((min !== null && num < min) || (max !== null && num > max)) {
+        setIsValid(false)
+        return false
+      }
+      setIsValid(true)
+      return true
     }
 
     return (
       <CommonWrapper field={field} error={error}>
         <TextInput
-          style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5 }}
-          value={value}
+          ref={inputRef}
+          style={{
+            borderWidth: 1,
+            borderColor: error ? "red" : isValid ? "#ccc" : "orange",
+            padding: 10,
+            borderRadius: 5,
+          }}
+          value={localValue}
           onChangeText={(text) => {
-            // Allow negative numbers
-            const isNegative = text.startsWith("-")
+            // Allow only numbers, one decimal point, and minus sign at the start
+            const sanitizedText = text
+              .replace(/[^0-9.-]/g, "")
+              .replace(/(?!^)-/g, "")
+              .replace(/(\..*)\./g, "$1")
+            setLocalValue(sanitizedText)
 
-            // Remove any non-numeric characters (except decimal point and minus sign)
-            let numericValue = text.replace(/[^0-9.-]/g, "")
-
-            // Ensure only one decimal point and handle negative numbers
-            const parts = numericValue.split(".")
-            let integerPart = parts[0].replace(/^-?0+/, "") // Remove leading zeros
-            if (integerPart === "") integerPart = "0"
-            let decimalPart = parts.length > 1 ? "." + parts[1].slice(0, 2) : "" // Limit to 2 decimal places
-
-            let formattedValue = (isNegative ? "-" : "") + integerPart + decimalPart
-
-            // Validate against min/max
-            const numValue = parseFloat(formattedValue)
-            if (!isNaN(numValue)) {
-              const validatedValue = validateNumber(numValue)
-              formattedValue = validatedValue.toString()
+            if (validateNumber(sanitizedText)) {
+              onChangeText(sanitizedText)
             }
-
-            // Add thousand separators
-            formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-
-            onChangeText(formattedValue)
+          }}
+          onBlur={() => {
+            const isValidNumber = validateNumber(localValue)
+            if (isValidNumber) {
+              const num = parseFloat(localValue)
+              let finalValue = num
+              if (min !== null && num < min) finalValue = min
+              if (max !== null && num > max) finalValue = max
+              const formattedValue = finalValue.toString()
+              setLocalValue(formattedValue)
+              onChangeText(formattedValue)
+            }
           }}
           keyboardType="numeric"
           {...props}
         />
+        {!isValid && (
+          <Text style={{ color: "orange", fontSize: 12, marginTop: 3 }}>
+            {min !== null && max !== null
+              ? `Please enter a number between ${min} and ${max}`
+              : min !== null
+              ? `Please enter a number greater than or equal to ${min}`
+              : max !== null
+              ? `Please enter a number less than or equal to ${max}`
+              : "Please enter a valid number"}
+          </Text>
+        )}
       </CommonWrapper>
     )
   },

@@ -47,6 +47,8 @@ export interface GravityFormField {
   nameFormat?: string
   addressType?: string
   phoneFormat?: string
+  rangeMin?: string
+  rangeMax?: string
 }
 
 export interface GravityFormObject {
@@ -123,6 +125,8 @@ export interface GravityFormProps {
   onValidationError?: (errors: Record<string, string>) => void
   containerStyle?: ViewStyle
   primaryColor?: string
+  textColor?: string
+  buttonTextColor?: string
   showFormTitle?: boolean
   formTitleStyle?: TextStyle
   showFormDescription?: boolean
@@ -172,8 +176,6 @@ export type GravityFormFieldType =
   | "post_custom_field"
   | "captcha"
   | "consent"
-  | "password"
-  | "stripe_creditcard"
 
 export type GravityFormVisibility = "visible" | "hidden" | "administrative"
 

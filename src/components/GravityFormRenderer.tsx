@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useState, useEffect, useMemo } from "react"
-import { View, Button, Text, ActivityIndicator } from "react-native"
+import { View, Button, Text, ActivityIndicator, TouchableOpacity } from "react-native"
 import { createApiClient } from "../utils/api"
 import { createFieldMapping, defaultFieldMapping } from "./FieldMapping"
 import { GravityFormProps, GravityFormObject, GravityFormField } from "../types"
@@ -13,7 +13,9 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     onSubmit,
     onValidationError,
     containerStyle,
-    primaryColor,
+    primaryColor = "#0000ff",
+    textColor = "#000000",
+    buttonTextColor = "#ffffff",
     showFormTitle = false,
     formTitleStyle,
     showFormDescription = false,
@@ -195,7 +197,8 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           onChangeText={changeHandler}
           onValueChange={changeHandler}
           error={errors[field.id]}
-          primaryColor={primaryColor || "#0000ff"}
+          primaryColor={primaryColor}
+          textColor={textColor}
         />
       )
     }
@@ -204,7 +207,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
       return (
         <View style={containerStyle}>
           <View style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 }}>
-            <ActivityIndicator size="small" color={primaryColor || "#0000ff"} />
+            <ActivityIndicator size="small" color={primaryColor} />
             <Text>Loading form...</Text>
           </View>
         </View>
@@ -232,12 +235,13 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
         {showFormTitle && <Text style={formTitleStyle}>{form.title}</Text>}
         {showFormDescription && form.description && <Text style={formDescriptionStyle}>{form.description}</Text>}
         {form.fields.map(renderField)}
-        <Button
-          title={submitting ? "Submitting..." : form.button.text || "Submit"}
+        <TouchableOpacity
           onPress={handleSubmit}
           disabled={submitting}
-          color={primaryColor || "#0000ff"}
-        />
+          style={{ backgroundColor: buttonTextColor, width: "100%", borderRadius: 8, justifyContent: "center", alignItems: "center", paddingVertical: 10 }}
+        >
+          <Text style={{ color: textColor }}>{submitting ? "Submitting..." : form.button.text || "Submit"}</Text>
+        </TouchableOpacity>
       </View>
     )
   }
