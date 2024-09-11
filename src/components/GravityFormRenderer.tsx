@@ -238,9 +238,9 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={submitting}
-          style={{ backgroundColor: buttonTextColor, width: "100%", borderRadius: 8, justifyContent: "center", alignItems: "center", paddingVertical: 10 }}
+          style={{ backgroundColor: primaryColor, width: "100%", borderRadius: 8, justifyContent: "center", alignItems: "center", paddingVertical: 10 }}
         >
-          <Text style={{ color: textColor }}>{submitting ? "Submitting..." : form.button.text || "Submit"}</Text>
+          <Text style={{ color: buttonTextColor }}>{submitting ? "Submitting..." : form.button.text || "Submit"}</Text>
         </TouchableOpacity>
       </View>
     )

@@ -158,6 +158,8 @@ export const defaultFieldMapping: FieldMapping = {
         selectedValue={value}
         onValueChange={onValueChange}
         style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", borderRadius: 5, color: textColor }}
+        dropdownIconColor={textColor}
+        selectionColor={primaryColor}
         {...props}
       >
         {field.choices?.map((choice: any) => (
