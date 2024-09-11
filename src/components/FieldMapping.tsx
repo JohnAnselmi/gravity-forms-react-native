@@ -17,6 +17,8 @@ import { FieldMapping, GravityFormField, GravityFormFieldInput } from "../types"
 /// Consent
 /// Signature (Add-On)
 
+//TODO: Switch to react-native-dropdown-picker for select. https://github.com/hossein-zare/react-native-dropdown-picker
+
 const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
 const websiteRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
 
@@ -32,11 +34,11 @@ const CommonWrapper: FC<{ field: GravityFormField; error?: string; textColor: st
   <View style={{ marginBottom: 15 }}>
     <Text style={{ fontWeight: "bold", marginBottom: 5, color: textColor }}>
       {field.label}
-      {field.isRequired ? " *" : ""}
+      <Text style={{ color: "red" }}>{field.isRequired ? " *" : ""}</Text>
     </Text>
     {children}
-    {field.description && <Text style={{ fontSize: 12, color: textColor, marginTop: 3 }}>{field.description}</Text>}
-    {error && <Text style={{ color: "red", fontSize: 12, marginTop: 3 }}>{error}</Text>}
+    {field.description && <Text style={{ color: textColor, marginTop: 3 }}>{field.description}</Text>}
+    {error && <Text style={{ color: "red", marginTop: 3 }}>{error}</Text>}
   </View>
 )
 
@@ -160,6 +162,7 @@ export const defaultFieldMapping: FieldMapping = {
         style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", borderRadius: 5, color: textColor }}
         dropdownIconColor={textColor}
         selectionColor={primaryColor}
+        prompt={field.label}
         {...props}
       >
         {field.choices?.map((choice: any) => (
