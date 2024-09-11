@@ -122,8 +122,10 @@ export interface GravityFormProps {
   onSubmit?: (data: any) => void
   onValidationError?: (errors: Record<string, string>) => void
   containerStyle?: ViewStyle
-  buttonColor?: string
+  primaryColor?: string
+  showFormTitle?: boolean
   formTitleStyle?: TextStyle
+  showFormDescription?: boolean
   formDescriptionStyle?: TextStyle
   formLoadingErrorStyle?: TextStyle
   confirmationMessageStyle?: TextStyle

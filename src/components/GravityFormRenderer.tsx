@@ -1,9 +1,10 @@
 import * as React from "react"
 import { useState, useEffect, useMemo } from "react"
-import { View, Button, Text, ActivityIndicator, ViewStyle } from "react-native"
+import { View, Button, Text, ActivityIndicator } from "react-native"
 import { createApiClient } from "../utils/api"
 import { createFieldMapping, defaultFieldMapping } from "./FieldMapping"
 import { GravityFormProps, GravityFormObject, GravityFormField } from "../types"
+import axios from "axios"
 
 const GravityForm: React.FC<GravityFormProps> = React.memo(
   ({
@@ -12,8 +13,10 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     onSubmit,
     onValidationError,
     containerStyle,
-    buttonColor,
+    primaryColor,
+    showFormTitle = false,
     formTitleStyle,
+    showFormDescription = false,
     formDescriptionStyle,
     formLoadingErrorStyle,
     confirmationMessageStyle,
@@ -32,6 +35,19 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
       const loadForm = async () => {
         try {
           const loadedForm = await apiClient.fetchGravityForm(formId)
+          const containsPaymentField = loadedForm.fields.some((field) => ["product", "total", "creditcard"].includes(field.type))
+          const containsPostField = loadedForm.fields.some((field) =>
+            ["post_title", "post_content", "post_excerpt", "post_tags", "post_category", "post_image"].includes(field.type)
+          )
+
+          if (containsPaymentField) {
+            throw new Error("Sorry, gravity-forms-react-native does not support forms with payment fields.")
+          }
+
+          if (containsPostField) {
+            throw new Error("Sorry, gravity-forms-react-native does not support forms with post fields.")
+          }
+
           setForm(loadedForm)
           initializeFormData(loadedForm.fields)
           setLoading(false)
@@ -40,6 +56,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           setLoading(false)
         }
       }
+
       loadForm()
     }, [formId])
 
@@ -48,8 +65,10 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
       fields.forEach((field) => {
         if (field.defaultValue) {
           initialData[field.id] = field.defaultValue
-        } else if (field.type === "name" || field.type === "address") {
-          initialData[field.id] = {}
+        } else if (field.type === "checkbox") {
+          initialData[field.id] = []
+        } else {
+          initialData[field.id] = ""
         }
       })
       setFormData(initialData)
@@ -64,8 +83,39 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
       if (!form) return
       setSubmitting(true)
 
+      const formattedData: Record<string, any> = {}
+
+      form.fields.forEach((field) => {
+        const fieldId = field.id.toString()
+        const value = formData[fieldId]
+
+        if (field.type === "checkbox" || field.type === "radio") {
+          if (Array.isArray(value)) {
+            // Multi-checkbox
+            field.choices?.forEach((choice, index) => {
+              if (value.includes(choice.value)) {
+                formattedData[`input_${fieldId}_${index + 1}`] = choice.value
+              }
+            })
+          } else if (typeof value === "string") {
+            // Single checkbox or radio button
+            formattedData[`input_${fieldId}`] = value
+          }
+        } else if (typeof value === "object" && value !== null) {
+          // Handle multi-input fields (like name or address)
+          Object.keys(value).forEach((subFieldId) => {
+            formattedData[`input_${fieldId}_${subFieldId.split(".")[1]}`] = value[subFieldId]
+          })
+        } else {
+          // Handle other field types
+          formattedData[`input_${fieldId}`] = value
+        }
+      })
+
+      console.log("Formatted form data:", formattedData)
+
       try {
-        const validationResponse = await apiClient.validateGravityForm(formId, formData)
+        const validationResponse = await apiClient.validateGravityForm(formId, formattedData)
 
         if (!validationResponse.is_valid) {
           setErrors(validationResponse.validation_messages || {})
@@ -74,7 +124,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           return
         }
 
-        const submitResponse = await apiClient.submitGravityForm(formId, formData)
+        const submitResponse = await apiClient.submitGravityForm(formId, formattedData)
 
         if (submitResponse.is_valid) {
           const defaultConfirmation = Object.values(form.confirmations).find((c) => c.isDefault)
@@ -89,7 +139,11 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           onValidationError?.(submitResponse.validation_messages || {})
         }
       } catch (error) {
-        console.error("Error submitting form:", error)
+        if (axios.isAxiosError(error)) {
+          console.error("Error submitting form:", error.response?.data || error.message)
+        } else {
+          console.error("Error submitting form:", error)
+        }
         setConfirmationMessage("An error occurred while submitting the form. Please try again.")
       } finally {
         setSubmitting(false)
@@ -131,13 +185,17 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
 
       const FieldComponent = fieldMapping[field.type] || defaultFieldMapping[field.type] || defaultFieldMapping.text
 
+      const changeHandler = (value: any) => handleInputChange(field.id, value)
+
       return (
         <FieldComponent
           key={field.id}
           field={field}
           value={formData[field.id]}
-          onChangeText={(value: any) => handleInputChange(field.id, value)}
+          onChangeText={changeHandler}
+          onValueChange={changeHandler}
           error={errors[field.id]}
+          primaryColor={primaryColor || "#0000ff"}
         />
       )
     }
@@ -145,8 +203,10 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     if (loading) {
       return (
         <View style={containerStyle}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text>Loading form...</Text>
+          <View style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 }}>
+            <ActivityIndicator size="small" color={primaryColor || "#0000ff"} />
+            <Text>Loading form...</Text>
+          </View>
         </View>
       )
     }
@@ -169,10 +229,15 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
 
     return (
       <View style={containerStyle}>
-        <Text style={formTitleStyle}>{form.title}</Text>
-        {form.description && <Text style={formDescriptionStyle}>{form.description}</Text>}
+        {showFormTitle && <Text style={formTitleStyle}>{form.title}</Text>}
+        {showFormDescription && form.description && <Text style={formDescriptionStyle}>{form.description}</Text>}
         {form.fields.map(renderField)}
-        <Button title={submitting ? "Submitting..." : form.button.text || "Submit"} onPress={handleSubmit} disabled={submitting} color={buttonColor} />
+        <Button
+          title={submitting ? "Submitting..." : form.button.text || "Submit"}
+          onPress={handleSubmit}
+          disabled={submitting}
+          color={primaryColor || "#0000ff"}
+        />
       </View>
     )
   }

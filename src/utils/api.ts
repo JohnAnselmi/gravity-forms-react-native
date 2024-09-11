@@ -29,6 +29,7 @@ export const createApiClient = (): GravityFormsApiClient => {
   }
 
   const submitGravityForm = async (formId: number, formData: Record<string, any>): Promise<GravityFormSubmission> => {
+    console.log("Submitting data within submitGravityForm function...", formData)
     const response = await client.post(`/forms/${formId}/submissions`, formData)
     return response.data
   }
