@@ -56,17 +56,54 @@ export const defaultFieldMapping: FieldMapping = {
       />
     </CommonWrapper>
   ),
-  number: ({ field, value, onChangeText, error, ...props }) => (
-    <CommonWrapper field={field} error={error}>
-      <TextInput
-        style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5 }}
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType="numeric"
-        {...props}
-      />
-    </CommonWrapper>
-  ),
+  number: ({ field, value, onChangeText, error, ...props }) => {
+    const min = field.rangeMin !== undefined ? parseFloat(field.rangeMin) : null
+    const max = field.rangeMax !== undefined ? parseFloat(field.rangeMax) : null
+
+    const validateNumber = (num: number): number => {
+      if (min !== null && num < min) return min
+      if (max !== null && num > max) return max
+      return num
+    }
+
+    return (
+      <CommonWrapper field={field} error={error}>
+        <TextInput
+          style={{ borderWidth: 1, borderColor: error ? "red" : "#ccc", padding: 10, borderRadius: 5 }}
+          value={value}
+          onChangeText={(text) => {
+            // Allow negative numbers
+            const isNegative = text.startsWith("-")
+
+            // Remove any non-numeric characters (except decimal point and minus sign)
+            let numericValue = text.replace(/[^0-9.-]/g, "")
+
+            // Ensure only one decimal point and handle negative numbers
+            const parts = numericValue.split(".")
+            let integerPart = parts[0].replace(/^-?0+/, "") // Remove leading zeros
+            if (integerPart === "") integerPart = "0"
+            let decimalPart = parts.length > 1 ? "." + parts[1].slice(0, 2) : "" // Limit to 2 decimal places
+
+            let formattedValue = (isNegative ? "-" : "") + integerPart + decimalPart
+
+            // Validate against min/max
+            const numValue = parseFloat(formattedValue)
+            if (!isNaN(numValue)) {
+              const validatedValue = validateNumber(numValue)
+              formattedValue = validatedValue.toString()
+            }
+
+            // Add thousand separators
+            formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+
+            onChangeText(formattedValue)
+          }}
+          keyboardType="numeric"
+          {...props}
+        />
+      </CommonWrapper>
+    )
+  },
   textarea: ({ field, value, onChangeText, error, ...props }) => (
     <CommonWrapper field={field} error={error}>
       <TextInput
