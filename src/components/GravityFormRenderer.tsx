@@ -208,7 +208,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
         <View style={containerStyle}>
           <View style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 }}>
             <ActivityIndicator size="small" color={primaryColor} />
-            <Text>Loading form...</Text>
+            <Text style={{ color: textColor }}>Loading form...</Text>
           </View>
         </View>
       )
