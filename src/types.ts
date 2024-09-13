@@ -1,4 +1,5 @@
 import { TextStyle, ViewStyle } from "react-native"
+import { ListModeType, ThemeNameType as DropdownThemeNameType } from "react-native-dropdown-picker"
 
 export type GravityFormFieldType = string
 export interface GravityFormFieldInput {
@@ -133,7 +134,12 @@ export interface GravityFormProps {
   fieldDescriptionStyle?: TextStyle
   fieldErrorMessageStyle?: TextStyle
   fieldValidationMessageStyle?: TextStyle
-  inputStyle?: TextStyle
+  sectionTitleStyle?: TextStyle
+  inputTextStyle?: TextStyle
+  inputBorderColor?: string
+  inputContainerStyle?: ViewStyle
+  dropdownListMode?: ListModeType
+  dropdownTheme?: DropdownThemeNameType
   submitButtonContainerStyle?: ViewStyle
   submitButtonTextStyle?: TextStyle
   loadingTextStyle?: TextStyle
@@ -155,7 +161,11 @@ export interface FieldComponentProps {
   fieldErrorMessageStyle?: TextStyle
   fieldValidationMessageStyle?: TextStyle
   sectionTitleStyle?: TextStyle
-  inputStyle?: TextStyle
+  inputTextStyle?: TextStyle
+  inputBorderColor?: string
+  inputContainerStyle?: ViewStyle
+  dropdownListMode?: ListModeType
+  dropdownTheme?: DropdownThemeNameType
   [key: string]: any
 }
 

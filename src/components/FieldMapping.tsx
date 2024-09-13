@@ -1,8 +1,9 @@
 import React, { FC, ReactNode, useRef, useState } from "react"
 import { TextInput, View, Text, Switch, TouchableOpacity, TextStyle, ViewStyle } from "react-native"
-import { Picker } from "@react-native-picker/picker"
+import DropDownPicker from "react-native-dropdown-picker"
 import { FieldMapping, GravityFormField, GravityFormFieldInput, FieldComponentProps } from "../types"
 
+//TODO: Fix readme to include all recent changes.
 //TODO: Missing Fields:
 /// HTML
 /// Page
@@ -13,9 +14,6 @@ import { FieldMapping, GravityFormField, GravityFormFieldInput, FieldComponentPr
 /// List
 /// MultiSelect
 /// Signature (Add-On)
-//TODO: Switch to react-native-dropdown-picker for select. https://github.com/hossein-zare/react-native-dropdown-picker
-//TODO: Allow for custom styles for inputs (border color, border width, etc.)
-//TODO: Fix readme to include all recent changes.
 
 // Regular expressions for validation
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -57,12 +55,19 @@ const CommonWrapper: FC<{
 }
 
 // Render sub-input for multi-input fields (like name, address, etc.)
-const renderSubInput = (input: GravityFormFieldInput, value: any, onChangeText: (text: any) => void, inputStyle: TextStyle) => {
+const renderSubInput = (
+  input: GravityFormFieldInput,
+  value: any,
+  onChangeText: (text: any) => void,
+  inputTextStyle: TextStyle,
+  inputBorderColor: string,
+  inputContainerStyle: ViewStyle
+) => {
   if (input.isHidden) return null
   return (
     <TextInput
       key={input.id}
-      style={[{ borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 5 }, inputStyle]}
+      style={[{ borderWidth: 1, borderColor: inputBorderColor, padding: 10, borderRadius: 5, marginBottom: 5 }, inputTextStyle, inputContainerStyle]}
       value={value[input.id] || ""}
       onChangeText={(text) => onChangeText({ ...value, [input.id]: text })}
       placeholder={input.label}
@@ -73,7 +78,21 @@ const renderSubInput = (input: GravityFormFieldInput, value: any, onChangeText: 
 export const defaultFieldMapping: FieldMapping = {
   // Address Field
   address: (props: FieldComponentProps) => {
-    const { field, value, onChangeText, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle, inputStyle } = props
+    const {
+      field,
+      value,
+      onChangeText,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
+      dropdownListMode,
+      dropdownTheme,
+    } = props
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
@@ -86,7 +105,7 @@ export const defaultFieldMapping: FieldMapping = {
         fieldDescriptionStyle={fieldDescriptionStyle}
         fieldErrorMessageStyle={fieldErrorMessageStyle}
       >
-        {field.inputs?.map((input) => renderSubInput(input, value, onChangeText!, inputStyle!))}
+        {field.inputs?.map((input) => renderSubInput(input, value, onChangeText!, inputTextStyle!, inputBorderColor!, inputContainerStyle!))}
       </CommonWrapper>
     )
   },
@@ -169,7 +188,9 @@ export const defaultFieldMapping: FieldMapping = {
       fieldDescriptionStyle,
       fieldErrorMessageStyle,
       fieldValidationMessageStyle,
-      inputStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
     } = props
 
     // Handle field visibility
@@ -196,11 +217,12 @@ export const defaultFieldMapping: FieldMapping = {
           style={[
             {
               borderWidth: 1,
-              borderColor: error ? "red" : isValid ? "#ccc" : "orange",
+              borderColor: error ? "red" : isValid ? inputBorderColor : "orange",
               padding: 10,
               borderRadius: 5,
             },
-            inputStyle,
+            inputTextStyle,
+            inputContainerStyle,
           ]}
           value={value}
           onChangeText={(text) => {
@@ -217,9 +239,78 @@ export const defaultFieldMapping: FieldMapping = {
     )
   },
 
+  // Multiselect Field
+  multiselect: (props: FieldComponentProps) => {
+    const {
+      field,
+      value,
+      onValueChange,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputBorderColor,
+      inputContainerStyle,
+      dropdownListMode,
+      dropdownTheme,
+    } = props
+
+    // Handle field visibility
+    if (field.visibility === "hidden" || field.visibility === "administrative") return null
+
+    const [open, setOpen] = useState(false)
+    const [items, setItems] = useState(
+      field.choices?.map((choice) => ({
+        label: choice.text,
+        value: choice.value,
+      })) || []
+    )
+
+    return (
+      <CommonWrapper
+        field={field}
+        error={error}
+        primaryColor={primaryColor!}
+        fieldLabelStyle={fieldLabelStyle}
+        fieldDescriptionStyle={fieldDescriptionStyle}
+        fieldErrorMessageStyle={fieldErrorMessageStyle}
+      >
+        <DropDownPicker
+          multiple={true}
+          min={0}
+          max={field.choices?.length}
+          open={open}
+          setOpen={setOpen}
+          value={value || []}
+          setValue={onValueChange!}
+          items={items}
+          setItems={setItems}
+          placeholder={field.placeholder || "Select options"}
+          style={{ borderColor: error ? "red" : inputBorderColor }}
+          dropDownContainerStyle={{ borderColor: error ? "red" : inputBorderColor, ...inputContainerStyle }}
+          listMode={dropdownListMode}
+          theme={dropdownTheme}
+        />
+      </CommonWrapper>
+    )
+  },
+
   // Name Field
   name: (props: FieldComponentProps) => {
-    const { field, value, onChangeText, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle, inputStyle } = props
+    const {
+      field,
+      value,
+      onChangeText,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
+    } = props
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
@@ -232,7 +323,7 @@ export const defaultFieldMapping: FieldMapping = {
         fieldDescriptionStyle={fieldDescriptionStyle}
         fieldErrorMessageStyle={fieldErrorMessageStyle}
       >
-        {field.inputs?.map((input) => renderSubInput(input, value, onChangeText!, inputStyle!))}
+        {field.inputs?.map((input) => renderSubInput(input, value, onChangeText!, inputTextStyle!, inputBorderColor!, inputContainerStyle!))}
       </CommonWrapper>
     )
   },
@@ -249,7 +340,9 @@ export const defaultFieldMapping: FieldMapping = {
       fieldDescriptionStyle,
       fieldErrorMessageStyle,
       fieldValidationMessageStyle,
-      inputStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
     } = props
 
     // Handle field visibility
@@ -290,11 +383,12 @@ export const defaultFieldMapping: FieldMapping = {
           style={[
             {
               borderWidth: 1,
-              borderColor: error ? "red" : isValid ? "#ccc" : "orange",
+              borderColor: error ? "red" : isValid ? inputBorderColor : "orange",
               padding: 10,
               borderRadius: 5,
             },
-            inputStyle,
+            inputTextStyle,
+            inputContainerStyle,
           ]}
           value={localValue}
           onChangeText={(text) => {
@@ -340,7 +434,19 @@ export const defaultFieldMapping: FieldMapping = {
 
   // Phone Field
   phone: (props: FieldComponentProps) => {
-    const { field, value, onChangeText, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle, inputStyle } = props
+    const {
+      field,
+      value,
+      onChangeText,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
+    } = props
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
@@ -357,11 +463,12 @@ export const defaultFieldMapping: FieldMapping = {
           style={[
             {
               borderWidth: 1,
-              borderColor: error ? "red" : "#ccc",
+              borderColor: error ? "red" : inputBorderColor,
               padding: 10,
               borderRadius: 5,
             },
-            inputStyle,
+            inputTextStyle,
+            inputContainerStyle,
           ]}
           value={value}
           onChangeText={onChangeText!}
@@ -433,9 +540,31 @@ export const defaultFieldMapping: FieldMapping = {
 
   // Select Field
   select: (props: FieldComponentProps) => {
-    const { field, value, onValueChange, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle } = props
+    const {
+      field,
+      value,
+      onValueChange,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputBorderColor,
+      inputContainerStyle,
+      dropdownListMode,
+      dropdownTheme,
+    } = props
+
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
+
+    const [open, setOpen] = useState(false)
+    const [items, setItems] = useState(
+      field.choices?.map((choice) => ({
+        label: choice.text,
+        value: choice.value,
+      })) || []
+    )
 
     return (
       <CommonWrapper
@@ -446,26 +575,38 @@ export const defaultFieldMapping: FieldMapping = {
         fieldDescriptionStyle={fieldDescriptionStyle}
         fieldErrorMessageStyle={fieldErrorMessageStyle}
       >
-        <View
-          style={{
-            borderWidth: 1,
-            borderColor: error ? "red" : "#ccc",
-            borderRadius: 5,
-          }}
-        >
-          <Picker selectedValue={value} onValueChange={onValueChange!} style={{ color: primaryColor }}>
-            {field.choices?.map((choice) => (
-              <Picker.Item label={choice.text} value={choice.value} key={choice.value} />
-            ))}
-          </Picker>
-        </View>
+        <DropDownPicker
+          open={open}
+          setOpen={setOpen}
+          value={value}
+          setValue={onValueChange!}
+          items={items}
+          setItems={setItems}
+          placeholder={field.placeholder || "Select an option"}
+          style={{ borderColor: error ? "red" : inputBorderColor }}
+          dropDownContainerStyle={{ borderColor: error ? "red" : inputBorderColor, ...inputContainerStyle }}
+          listMode={dropdownListMode}
+          theme={dropdownTheme}
+        />
       </CommonWrapper>
     )
   },
 
   // Text Field
   text: (props: FieldComponentProps) => {
-    const { field, value, onChangeText, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle, inputStyle } = props
+    const {
+      field,
+      value,
+      onChangeText,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
+    } = props
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
@@ -482,11 +623,12 @@ export const defaultFieldMapping: FieldMapping = {
           style={[
             {
               borderWidth: 1,
-              borderColor: error ? "red" : "#ccc",
+              borderColor: error ? "red" : inputBorderColor,
               padding: 10,
               borderRadius: 5,
             },
-            inputStyle,
+            inputTextStyle,
+            inputContainerStyle,
           ]}
           value={value}
           onChangeText={onChangeText!}
@@ -497,7 +639,19 @@ export const defaultFieldMapping: FieldMapping = {
 
   // Textarea Field
   textarea: (props: FieldComponentProps) => {
-    const { field, value, onChangeText, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle, inputStyle } = props
+    const {
+      field,
+      value,
+      onChangeText,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
+    } = props
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
@@ -514,14 +668,15 @@ export const defaultFieldMapping: FieldMapping = {
           style={[
             {
               borderWidth: 1,
-              borderColor: error ? "red" : "#ccc",
+              borderColor: error ? "red" : inputBorderColor,
               padding: 10,
               borderRadius: 5,
               height: 100,
               textAlignVertical: "top",
               paddingTop: 5,
             },
-            inputStyle,
+            inputTextStyle,
+            inputContainerStyle,
           ]}
           multiline
           value={value}
@@ -543,7 +698,9 @@ export const defaultFieldMapping: FieldMapping = {
       fieldDescriptionStyle,
       fieldErrorMessageStyle,
       fieldValidationMessageStyle,
-      inputStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
     } = props
 
     // Handle field visibility
@@ -570,11 +727,12 @@ export const defaultFieldMapping: FieldMapping = {
           style={[
             {
               borderWidth: 1,
-              borderColor: error ? "red" : isValid ? "#ccc" : "orange",
+              borderColor: error ? "red" : isValid ? inputBorderColor : "orange",
               padding: 10,
               borderRadius: 5,
             },
-            inputStyle,
+            inputTextStyle,
+            inputContainerStyle,
           ]}
           value={value}
           onChangeText={(text) => {

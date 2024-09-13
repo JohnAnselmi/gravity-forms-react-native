@@ -24,7 +24,11 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     fieldDescriptionStyle,
     fieldErrorMessageStyle,
     fieldValidationMessageStyle,
-    inputStyle,
+    inputTextStyle,
+    inputBorderColor = "#ccc",
+    inputContainerStyle,
+    dropdownListMode = "MODAL",
+    dropdownTheme,
     submitButtonContainerStyle,
     submitButtonTextStyle,
     loadingTextStyle,
@@ -212,7 +216,11 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           fieldDescriptionStyle={fieldDescriptionStyle}
           fieldErrorMessageStyle={fieldErrorMessageStyle}
           fieldValidationMessageStyle={fieldValidationMessageStyle}
-          inputStyle={inputStyle}
+          inputTextStyle={inputTextStyle}
+          inputBorderColor={inputBorderColor}
+          inputContainerStyle={inputContainerStyle}
+          dropdownListMode={dropdownListMode}
+          dropdownTheme={dropdownTheme}
         />
       )
     }
