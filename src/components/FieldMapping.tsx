@@ -4,6 +4,8 @@ import DropDownPicker from "react-native-dropdown-picker"
 import { FieldMapping, GravityFormField, GravityFormFieldInput, FieldComponentProps } from "../types"
 
 //TODO: Fix readme to include all recent changes.
+//TODO: Dropdown selection not working for select field.
+//TODO: Fatal error when selecting a value in multiselect field.
 //TODO: Missing Fields:
 /// HTML
 /// Page
@@ -12,7 +14,6 @@ import { FieldMapping, GravityFormField, GravityFormFieldInput, FieldComponentPr
 /// File Upload
 /// CAPTCHA
 /// List
-/// MultiSelect
 /// Signature (Add-On)
 
 // Regular expressions for validation
