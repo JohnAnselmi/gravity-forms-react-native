@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useState, useEffect, useMemo } from "react"
-import { View, Button, Text, ActivityIndicator, TouchableOpacity } from "react-native"
+import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native"
 import { createApiClient } from "../utils/api"
 import { createFieldMapping, defaultFieldMapping } from "./FieldMapping"
 import { GravityFormProps, GravityFormObject, GravityFormField } from "../types"
@@ -14,14 +14,24 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     onValidationError,
     containerStyle,
     primaryColor = "#0000ff",
-    textColor = "#000000",
-    buttonTextColor = "#ffffff",
     showFormTitle = false,
     formTitleStyle,
     showFormDescription = false,
     formDescriptionStyle,
-    formLoadingErrorStyle,
+    formErrorStyle,
     confirmationMessageStyle,
+    fieldLabelStyle,
+    fieldDescriptionStyle,
+    fieldErrorMessageStyle,
+    fieldValidationMessageStyle,
+    inputStyle,
+    submitButtonContainerStyle,
+    submitButtonTextStyle,
+    loadingTextStyle,
+    loadingSpinnerStyle,
+    loadingSpinnerColor,
+    loadingSpinnerSize = "small",
+    loadingComponent,
   }) => {
     const [form, setForm] = useState<GravityFormObject | null>(null)
     const [formData, setFormData] = useState<Record<string, any>>({})
@@ -198,17 +208,25 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           onValueChange={changeHandler}
           error={errors[field.id]}
           primaryColor={primaryColor}
-          textColor={textColor}
+          fieldLabelStyle={fieldLabelStyle}
+          fieldDescriptionStyle={fieldDescriptionStyle}
+          fieldErrorMessageStyle={fieldErrorMessageStyle}
+          fieldValidationMessageStyle={fieldValidationMessageStyle}
+          inputStyle={inputStyle}
         />
       )
     }
 
     if (loading) {
+      if (loadingComponent) {
+        return <View style={containerStyle}>{loadingComponent}</View>
+      }
+
       return (
         <View style={containerStyle}>
-          <View style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 }}>
-            <ActivityIndicator size="small" color={primaryColor} />
-            <Text style={{ color: textColor }}>Loading form...</Text>
+          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", ...loadingSpinnerStyle }}>
+            <ActivityIndicator size={loadingSpinnerSize} color={loadingSpinnerColor || primaryColor} />
+            <Text style={loadingTextStyle}>Loading form...</Text>
           </View>
         </View>
       )
@@ -225,7 +243,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     if (!form) {
       return (
         <View style={containerStyle}>
-          <Text style={formLoadingErrorStyle}>Error loading form. Please try again later.</Text>
+          <Text style={formErrorStyle}>Error loading form. Please try again later.</Text>
         </View>
       )
     }
@@ -238,9 +256,19 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={submitting}
-          style={{ backgroundColor: primaryColor, width: "100%", borderRadius: 8, justifyContent: "center", alignItems: "center", paddingVertical: 10 }}
+          style={[
+            {
+              backgroundColor: primaryColor,
+              width: "100%",
+              borderRadius: 8,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingVertical: 10,
+            },
+            submitButtonContainerStyle,
+          ]}
         >
-          <Text style={{ color: buttonTextColor }}>{submitting ? "Submitting..." : form.button.text || "Submit"}</Text>
+          <Text style={submitButtonTextStyle}>{submitting ? "Submitting..." : form.button.text || "Submit"}</Text>
         </TouchableOpacity>
       </View>
     )

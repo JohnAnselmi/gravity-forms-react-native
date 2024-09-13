@@ -1,5 +1,6 @@
 import { TextStyle, ViewStyle } from "react-native"
 
+export type GravityFormFieldType = string
 export interface GravityFormFieldInput {
   id: string
   label: string
@@ -19,7 +20,7 @@ export interface GravityFormField {
   isRequired: boolean
   size?: string
   errorMessage?: string
-  visibility?: string
+  visibility?: GravityFormVisibility
   inputs?: GravityFormFieldInput[]
   choices?: Array<{ text: string; value: string; isSelected?: boolean; price?: string }>
   description?: string
@@ -37,9 +38,9 @@ export interface GravityFormField {
     rules: Array<{ fieldId: string; operator: string; value: string }>
   }
   layoutGridColumnSpan?: number
-  labelPlacement?: string
-  descriptionPlacement?: string
-  subLabelPlacement?: string
+  labelPlacement?: GravityFormLabelPlacement
+  descriptionPlacement?: GravityFormDescriptionPlacement
+  subLabelPlacement?: GravityFormSubLabelPlacement
   inputType?: string
   enablePrice?: boolean | null
   basePrice?: string
@@ -49,6 +50,7 @@ export interface GravityFormField {
   phoneFormat?: string
   rangeMin?: string
   rangeMax?: string
+  checkboxLabel?: string
 }
 
 export interface GravityFormObject {
@@ -114,10 +116,6 @@ export interface GravityFormSubmission {
   resume_token?: string
 }
 
-export interface FieldMapping {
-  [key: string]: React.ComponentType<any>
-}
-
 export interface GravityFormProps {
   formId: number
   customFieldMapping?: FieldMapping
@@ -125,14 +123,44 @@ export interface GravityFormProps {
   onValidationError?: (errors: Record<string, string>) => void
   containerStyle?: ViewStyle
   primaryColor?: string
-  textColor?: string
-  buttonTextColor?: string
   showFormTitle?: boolean
   formTitleStyle?: TextStyle
   showFormDescription?: boolean
   formDescriptionStyle?: TextStyle
-  formLoadingErrorStyle?: TextStyle
+  formErrorStyle?: TextStyle
   confirmationMessageStyle?: TextStyle
+  fieldLabelStyle?: TextStyle
+  fieldDescriptionStyle?: TextStyle
+  fieldErrorMessageStyle?: TextStyle
+  fieldValidationMessageStyle?: TextStyle
+  inputStyle?: TextStyle
+  submitButtonContainerStyle?: ViewStyle
+  submitButtonTextStyle?: TextStyle
+  loadingTextStyle?: TextStyle
+  loadingSpinnerStyle?: ViewStyle
+  loadingSpinnerColor?: string
+  loadingSpinnerSize?: number | "small" | "large"
+  loadingComponent?: React.ReactNode
+}
+
+export interface FieldComponentProps {
+  field: GravityFormField
+  value: any
+  onChangeText?: (text: string) => void
+  onValueChange?: (value: any) => void
+  error?: string
+  primaryColor: string
+  fieldLabelStyle?: TextStyle
+  fieldDescriptionStyle?: TextStyle
+  fieldErrorMessageStyle?: TextStyle
+  fieldValidationMessageStyle?: TextStyle
+  sectionTitleStyle?: TextStyle
+  inputStyle?: TextStyle
+  [key: string]: any
+}
+
+export interface FieldMapping {
+  [key: string]: React.FC<FieldComponentProps>
 }
 
 export interface GravityFormsApiClient {
@@ -141,46 +169,7 @@ export interface GravityFormsApiClient {
   validateGravityForm: (formId: number, formData: Record<string, any>) => Promise<GravityFormSubmission>
 }
 
-// Additional utility types
-export type GravityFormFieldType =
-  | "text"
-  | "textarea"
-  | "select"
-  | "multiselect"
-  | "number"
-  | "checkbox"
-  | "radio"
-  | "hidden"
-  | "html"
-  | "section"
-  | "page"
-  | "name"
-  | "date"
-  | "time"
-  | "phone"
-  | "address"
-  | "website"
-  | "email"
-  | "fileupload"
-  | "list"
-  | "product"
-  | "quantity"
-  | "option"
-  | "shipping"
-  | "post_title"
-  | "post_content"
-  | "post_excerpt"
-  | "post_tags"
-  | "post_category"
-  | "post_image"
-  | "post_custom_field"
-  | "captcha"
-  | "consent"
-
 export type GravityFormVisibility = "visible" | "hidden" | "administrative"
-
 export type GravityFormLabelPlacement = "top_label" | "left_label" | "right_label"
-
 export type GravityFormDescriptionPlacement = "below" | "above"
-
 export type GravityFormSubLabelPlacement = "below" | "above"
