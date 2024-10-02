@@ -1,21 +1,34 @@
 import { ColorValue, ModalProps, TextInputProps, TextStyle, ViewStyle } from "react-native"
 
-export type GravityFormFieldType =
-  | "text"
-  | "textarea"
-  | "select"
-  | "multiselect"
-  | "checkbox"
-  | "radio"
-  | "name"
-  | "address"
-  | "phone"
-  | "email"
-  | "website"
-  | "number"
-  | "date"
-  | "time"
-  | "list"
+export enum GravityFormFieldType {
+  // Standard Fields
+  Text = "text",
+  Textarea = "textarea",
+  Select = "select",
+  Number = "number",
+  Checkbox = "checkbox",
+  Radio = "radio",
+  Hidden = "hidden",
+  Section = "section",
+
+  // Advanced Fields
+  Name = "name",
+  Date = "date",
+  Time = "time",
+  Phone = "phone",
+  Address = "address",
+  Website = "website",
+  Email = "email",
+  List = "list",
+  Multiselect = "multiselect",
+  Consent = "consent",
+
+  //Future Fields
+  // FileUpload = "fileupload",
+  // Captcha = "captcha",
+  // HTML = "html",
+  // Page = "page",
+}
 
 export interface GravityFormFieldInput {
   id: string

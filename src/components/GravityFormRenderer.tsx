@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react"
 import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native"
 import { createApiClient } from "../utils/api"
 import { createFieldMapping, defaultFieldMapping } from "./FieldMapping"
-import { GravityFormProps, GravityFormObject, GravityFormField } from "../types"
+import { GravityFormProps, GravityFormObject, GravityFormField, GravityFormFieldType } from "../types"
 
 const GravityForm: React.FC<GravityFormProps> = React.memo(
   ({
@@ -225,7 +225,16 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     const renderField = (field: GravityFormField) => {
       if (!evaluateConditionalLogic(field)) return null
       if (field.visibility === "hidden") return null
-      if (field.type === "page" || field.type === "captcha" || field.type === "html") return null
+
+      const hasCustomMapping = customFieldMapping.hasOwnProperty(field.type)
+
+      if (!hasCustomMapping) {
+        const validFieldTypes = Object.values(GravityFormFieldType).map((type) => type.toLowerCase())
+        if (!validFieldTypes.includes(field.type.toLowerCase())) {
+          console.warn(`Skipping unsupported field type: ${field.type}`)
+          return null
+        }
+      }
 
       const FieldComponent = fieldMapping[field.type] || defaultFieldMapping[field.type] || defaultFieldMapping.text
 
