@@ -231,7 +231,6 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
       if (!hasCustomMapping) {
         const validFieldTypes = Object.values(GravityFormFieldType).map((type) => type.toLowerCase())
         if (!validFieldTypes.includes(field.type.toLowerCase())) {
-          console.warn(`Skipping unsupported field type: ${field.type}`)
           return null
         }
       }
