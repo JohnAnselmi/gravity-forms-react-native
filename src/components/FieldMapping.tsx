@@ -1,13 +1,10 @@
 import React, { FC, ReactNode, useRef, useState } from "react"
-import { TextInput, View, Text, Switch, TouchableOpacity, TextStyle, ViewStyle, Platform, ScrollView } from "react-native"
+import { TextInput, View, Text, Switch, TouchableOpacity, TextStyle, ViewStyle, ScrollView } from "react-native"
 import Dropdown from "react-native-input-select"
 import { FieldMapping, GravityFormField, GravityFormFieldInput, FieldComponentProps } from "../types"
 import DateTimePickerModal from "react-native-modal-datetime-picker"
 
 //TODO: Move all components to separate files, this is getting long.
-//TODO: Missing Fields:
-/// File Upload (probably going to develop WP plugin for this)
-/// Signature (use react-native-signature-canvas)
 
 // Regular expressions for validation
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
