@@ -4,7 +4,6 @@ import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native"
 import { createApiClient } from "../utils/api"
 import { createFieldMapping, defaultFieldMapping } from "./FieldMapping"
 import { GravityFormProps, GravityFormObject, GravityFormField } from "../types"
-import axios from "axios"
 
 const GravityForm: React.FC<GravityFormProps> = React.memo(
   ({
@@ -27,8 +26,28 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     inputTextStyle,
     inputBorderColor = "#ccc",
     inputContainerStyle,
-    dropdownListMode = "MODAL",
-    dropdownTheme,
+    sectionTitleStyle,
+    // Dropdown props
+    dropdownPlaceholderStyle,
+    dropdownStyle,
+    dropdownContainerStyle,
+    dropdownIcon,
+    dropdownIconStyle,
+    dropdownSelectedItemStyle,
+    dropdownMultipleSelectedItemStyle,
+    dropdownErrorStyle,
+    dropdownErrorTextStyle,
+    dropdownHelperTextStyle,
+    dropdownIsSearchable,
+    dropdownAutoCloseOnSelect,
+    dropdownListEmptyComponent,
+    dropdownPrimaryColor,
+    dropdownListComponentStyles,
+    dropdownListControls,
+    dropdownSearchControls,
+    dropdownModalControls,
+    dropdownCheckboxControls,
+    // Other props
     submitButtonContainerStyle,
     submitButtonTextStyle,
     loadingTextStyle,
@@ -36,6 +55,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     loadingSpinnerColor,
     loadingSpinnerSize = "small",
     loadingComponent,
+    multipleSelectionMessage = "You can select multiple options",
   }) => {
     const [form, setForm] = useState<GravityFormObject | null>(null)
     const [formData, setFormData] = useState<Record<string, any>>({})
@@ -53,7 +73,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           const loadedForm = await apiClient.fetchGravityForm(formId)
           const containsPaymentField = loadedForm.fields.some((field) => ["product", "total", "creditcard"].includes(field.type))
           const containsPostField = loadedForm.fields.some((field) =>
-            ["post_title", "post_content", "post_excerpt", "post_tags", "post_category", "post_image"].includes(field.type)
+            ["post_title", "post_content", "post_excerpt", "post_tags", "post_category", "post_image", "post_custom_field"].includes(field.type)
           )
 
           if (containsPaymentField) {
@@ -81,7 +101,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
       fields.forEach((field) => {
         if (field.defaultValue) {
           initialData[field.id] = field.defaultValue
-        } else if (field.type === "checkbox") {
+        } else if (field.type === "checkbox" || field.type === "multiselect") {
           initialData[field.id] = []
         } else {
           initialData[field.id] = ""
@@ -117,18 +137,29 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
             // Single checkbox or radio button
             formattedData[`input_${fieldId}`] = value
           }
+        } else if (field.type === "select" && Array.isArray(value)) {
+          // Multiselect field
+          formattedData[`input_${fieldId}`] = value
+        } else if (field.type === "select") {
+          // Single select field
+          formattedData[`input_${fieldId}`] = value
         } else if (typeof value === "object" && value !== null) {
           // Handle multi-input fields (like name or address)
           Object.keys(value).forEach((subFieldId) => {
             formattedData[`input_${fieldId}_${subFieldId.split(".")[1]}`] = value[subFieldId]
           })
+        } else if (field.type === "list") {
+          const parsedValue = JSON.parse(value)
+          if (field.enableColumns) {
+            formattedData[`input_${fieldId}`] = parsedValue.map((row: any) => Object.values(row).join("|")).join(",")
+          } else {
+            formattedData[`input_${fieldId}`] = parsedValue.map((row: any) => row.value || Object.values(row)[0]).join(",")
+          }
         } else {
           // Handle other field types
           formattedData[`input_${fieldId}`] = value
         }
       })
-
-      console.log("Formatted form data:", formattedData)
 
       try {
         const validationResponse = await apiClient.validateGravityForm(formId, formattedData)
@@ -155,11 +186,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           onValidationError?.(submitResponse.validation_messages || {})
         }
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.error("Error submitting form:", error.response?.data || error.message)
-        } else {
-          console.error("Error submitting form:", error)
-        }
+        console.error("Error submitting form:", error)
         setConfirmationMessage("An error occurred while submitting the form. Please try again.")
       } finally {
         setSubmitting(false)
@@ -198,6 +225,7 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
     const renderField = (field: GravityFormField) => {
       if (!evaluateConditionalLogic(field)) return null
       if (field.visibility === "hidden") return null
+      if (field.type === "page" || field.type === "captcha" || field.type === "html") return null
 
       const FieldComponent = fieldMapping[field.type] || defaultFieldMapping[field.type] || defaultFieldMapping.text
 
@@ -212,15 +240,35 @@ const GravityForm: React.FC<GravityFormProps> = React.memo(
           onValueChange={changeHandler}
           error={errors[field.id]}
           primaryColor={primaryColor}
-          fieldLabelStyle={fieldLabelStyle}
+          fieldLabelStyle={{ marginBottom: 6, ...fieldLabelStyle }}
           fieldDescriptionStyle={fieldDescriptionStyle}
           fieldErrorMessageStyle={fieldErrorMessageStyle}
           fieldValidationMessageStyle={fieldValidationMessageStyle}
           inputTextStyle={inputTextStyle}
           inputBorderColor={inputBorderColor}
           inputContainerStyle={inputContainerStyle}
-          dropdownListMode={dropdownListMode}
-          dropdownTheme={dropdownTheme}
+          sectionTitleStyle={sectionTitleStyle}
+          // Pass dropdown props (prefixed with 'dropdown')
+          dropdownPlaceholderStyle={dropdownPlaceholderStyle}
+          dropdownStyle={dropdownStyle}
+          dropdownContainerStyle={dropdownContainerStyle}
+          dropdownIcon={dropdownIcon}
+          dropdownIconStyle={dropdownIconStyle}
+          dropdownSelectedItemStyle={dropdownSelectedItemStyle}
+          dropdownMultipleSelectedItemStyle={dropdownMultipleSelectedItemStyle}
+          dropdownErrorStyle={dropdownErrorStyle}
+          dropdownErrorTextStyle={dropdownErrorTextStyle}
+          dropdownHelperTextStyle={dropdownHelperTextStyle}
+          dropdownIsSearchable={dropdownIsSearchable}
+          dropdownAutoCloseOnSelect={dropdownAutoCloseOnSelect}
+          dropdownListEmptyComponent={dropdownListEmptyComponent}
+          dropdownPrimaryColor={dropdownPrimaryColor}
+          dropdownListComponentStyles={dropdownListComponentStyles}
+          dropdownListControls={dropdownListControls}
+          dropdownSearchControls={dropdownSearchControls}
+          dropdownModalControls={dropdownModalControls}
+          dropdownCheckboxControls={dropdownCheckboxControls}
+          multipleSelectionMessage={multipleSelectionMessage}
         />
       )
     }

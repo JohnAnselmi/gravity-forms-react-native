@@ -1,20 +1,12 @@
 import React, { FC, ReactNode, useRef, useState } from "react"
-import { TextInput, View, Text, Switch, TouchableOpacity, TextStyle, ViewStyle } from "react-native"
-import DropDownPicker from "react-native-dropdown-picker"
+import { TextInput, View, Text, Switch, TouchableOpacity, TextStyle, ViewStyle, Platform, ScrollView } from "react-native"
+import Dropdown from "react-native-input-select"
 import { FieldMapping, GravityFormField, GravityFormFieldInput, FieldComponentProps } from "../types"
+import DateTimePickerModal from "react-native-modal-datetime-picker"
 
-//TODO: Fix readme to include all recent changes.
-//TODO: Dropdown selection not working for select field.
-//TODO: Fatal error when selecting a value in multiselect field.
 //TODO: Missing Fields:
-/// HTML
-/// Page
-/// Date
-/// Time
-/// File Upload
-/// CAPTCHA
-/// List
-/// Signature (Add-On)
+/// File Upload (probably going to develop WP plugin for this)
+/// Signature (use react-native-signature-canvas)
 
 // Regular expressions for validation
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -31,7 +23,6 @@ const CommonWrapper: FC<{
   fieldValidationMessageStyle?: TextStyle
   children: ReactNode
 }> = ({ field, error, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle, children }) => {
-  // Determine label and description placement
   const labelPlacement = field.labelPlacement || "top_label"
   const descriptionPlacement = field.descriptionPlacement || "below"
 
@@ -68,7 +59,11 @@ const renderSubInput = (
   return (
     <TextInput
       key={input.id}
-      style={[{ borderWidth: 1, borderColor: inputBorderColor, padding: 10, borderRadius: 5, marginBottom: 5 }, inputTextStyle, inputContainerStyle]}
+      style={[
+        { borderWidth: 1, borderColor: inputBorderColor, padding: 10, borderRadius: 5, marginBottom: 5, marginTop: 5 },
+        inputTextStyle,
+        inputContainerStyle,
+      ]}
       value={value[input.id] || ""}
       onChangeText={(text) => onChangeText({ ...value, [input.id]: text })}
       placeholder={input.label}
@@ -91,8 +86,6 @@ export const defaultFieldMapping: FieldMapping = {
       inputTextStyle,
       inputBorderColor,
       inputContainerStyle,
-      dropdownListMode,
-      dropdownTheme,
     } = props
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
@@ -113,7 +106,7 @@ export const defaultFieldMapping: FieldMapping = {
 
   // Checkbox Field
   checkbox: (props: FieldComponentProps) => {
-    const { field, value, onValueChange, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle } = props
+    const { field, value, onValueChange, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle, inputTextStyle } = props
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
@@ -147,7 +140,7 @@ export const defaultFieldMapping: FieldMapping = {
               thumbColor={primaryColor}
               trackColor={{ false: "#ccc", true: primaryColor }}
             />
-            <Text style={{ marginLeft: 10 }}>{choice.text}</Text>
+            <Text style={{ marginLeft: 10, ...inputTextStyle }}>{choice.text}</Text>
           </View>
         ))}
       </CommonWrapper>
@@ -173,6 +166,76 @@ export const defaultFieldMapping: FieldMapping = {
           <Switch value={value} onValueChange={onValueChange!} thumbColor={primaryColor} trackColor={{ false: "#ccc", true: primaryColor }} />
           <Text style={{ marginLeft: 10 }}>{field.checkboxLabel}</Text>
         </View>
+      </CommonWrapper>
+    )
+  },
+
+  // Date Field
+  date: (props: FieldComponentProps) => {
+    const {
+      field,
+      value,
+      onChangeText,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
+    } = props
+
+    if (field.visibility === "hidden" || field.visibility === "administrative") return null
+
+    const [isDatePickerVisible, setDatePickerVisibility] = useState(false)
+
+    const showDatePicker = () => {
+      setDatePickerVisibility(true)
+    }
+
+    const hideDatePicker = () => {
+      setDatePickerVisibility(false)
+    }
+
+    const handleConfirm = (date: Date) => {
+      onChangeText!(date.toISOString().split("T")[0])
+      hideDatePicker()
+    }
+
+    return (
+      <CommonWrapper
+        field={field}
+        error={error}
+        primaryColor={primaryColor!}
+        fieldLabelStyle={fieldLabelStyle}
+        fieldDescriptionStyle={fieldDescriptionStyle}
+        fieldErrorMessageStyle={fieldErrorMessageStyle}
+      >
+        <TouchableOpacity onPress={showDatePicker}>
+          <TextInput
+            style={[
+              {
+                borderWidth: 1,
+                borderColor: error ? "red" : inputBorderColor,
+                padding: 10,
+                borderRadius: 5,
+              },
+              inputTextStyle,
+              inputContainerStyle,
+            ]}
+            value={value}
+            editable={false}
+            placeholder={field.placeholder || "Select date"}
+          />
+        </TouchableOpacity>
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="date"
+          onConfirm={handleConfirm}
+          onCancel={hideDatePicker}
+          date={value ? new Date(value) : new Date()}
+        />
       </CommonWrapper>
     )
   },
@@ -240,6 +303,110 @@ export const defaultFieldMapping: FieldMapping = {
     )
   },
 
+  // List Field
+  list: (props: FieldComponentProps) => {
+    const {
+      field,
+      value,
+      onChangeText,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
+    } = props
+
+    if (field.visibility === "hidden" || field.visibility === "administrative") return null
+
+    const [rows, setRows] = useState<any[]>(value ? JSON.parse(value) : [{}])
+
+    const updateRow = (rowIndex: number, columnKey: string, text: string) => {
+      const updatedRows = [...rows]
+      updatedRows[rowIndex] = { ...updatedRows[rowIndex], [columnKey]: text }
+      setRows(updatedRows)
+      onChangeText!(JSON.stringify(updatedRows))
+    }
+
+    const addRow = () => {
+      if (field.maxRows && rows.length >= field.maxRows) return
+      const updatedRows = [...rows, {}]
+      setRows(updatedRows)
+      onChangeText!(JSON.stringify(updatedRows))
+    }
+
+    const removeRow = (index: number) => {
+      const updatedRows = rows.filter((_, i) => i !== index)
+      setRows(updatedRows)
+      onChangeText!(JSON.stringify(updatedRows))
+    }
+
+    return (
+      <CommonWrapper
+        field={field}
+        error={error}
+        primaryColor={primaryColor!}
+        fieldLabelStyle={fieldLabelStyle}
+        fieldDescriptionStyle={fieldDescriptionStyle}
+        fieldErrorMessageStyle={fieldErrorMessageStyle}
+      >
+        <ScrollView>
+          {rows.map((row, rowIndex) => (
+            <View key={rowIndex} style={{ marginBottom: 10 }}>
+              {field.enableColumns ? (
+                field.choices?.map((column, columnIndex) => (
+                  <TextInput
+                    key={columnIndex}
+                    style={[
+                      {
+                        borderWidth: 1,
+                        borderColor: error ? "red" : inputBorderColor,
+                        padding: 10,
+                        borderRadius: 5,
+                        marginBottom: 5,
+                      },
+                      inputTextStyle,
+                      inputContainerStyle,
+                    ]}
+                    value={row[column.value] || ""}
+                    onChangeText={(text) => updateRow(rowIndex, column.value, text)}
+                    placeholder={column.text}
+                  />
+                ))
+              ) : (
+                <TextInput
+                  style={[
+                    {
+                      borderWidth: 1,
+                      borderColor: error ? "red" : inputBorderColor,
+                      padding: 10,
+                      borderRadius: 5,
+                    },
+                    inputTextStyle,
+                    inputContainerStyle,
+                  ]}
+                  value={row.value || ""}
+                  onChangeText={(text) => updateRow(rowIndex, "value", text)}
+                  placeholder={field.label}
+                />
+              )}
+              <TouchableOpacity onPress={() => removeRow(rowIndex)} style={{ alignSelf: "flex-end" }}>
+                <Text style={{ color: "red" }}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          {(!field.maxRows || rows.length < field.maxRows) && (
+            <TouchableOpacity onPress={addRow} style={{ alignSelf: "flex-start" }}>
+              <Text style={{ color: primaryColor }}>Add Row</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </CommonWrapper>
+    )
+  },
+
   // Multiselect Field
   multiselect: (props: FieldComponentProps) => {
     const {
@@ -253,47 +420,88 @@ export const defaultFieldMapping: FieldMapping = {
       fieldErrorMessageStyle,
       inputBorderColor,
       inputContainerStyle,
-      dropdownListMode,
-      dropdownTheme,
+      // Dropdown props
+      dropdownPlaceholderStyle,
+      dropdownStyle,
+      dropdownContainerStyle,
+      dropdownIcon,
+      dropdownIconStyle,
+      dropdownSelectedItemStyle,
+      dropdownMultipleSelectedItemStyle,
+      dropdownErrorStyle,
+      dropdownErrorTextStyle,
+      dropdownHelperTextStyle,
+      dropdownIsSearchable,
+      dropdownAutoCloseOnSelect,
+      dropdownListEmptyComponent,
+      dropdownPrimaryColor,
+      dropdownListComponentStyles,
+      dropdownListControls,
+      dropdownSearchControls,
+      dropdownModalControls,
+      dropdownCheckboxControls,
+      multipleSelectionMessage,
     } = props
 
-    // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
-    const [open, setOpen] = useState(false)
-    const [items, setItems] = useState(
+    const options =
       field.choices?.map((choice) => ({
         label: choice.text,
         value: choice.value,
       })) || []
-    )
+
+    if (!onValueChange) {
+      console.error(`onValueChange is not defined for multiselect field ${field.id}`)
+      return null
+    }
 
     return (
-      <CommonWrapper
-        field={field}
+      <Dropdown
+        label={field.label}
+        placeholder={field.placeholder || "Select options"}
+        options={options}
+        selectedValue={value}
+        onValueChange={onValueChange}
+        primaryColor={dropdownPrimaryColor || primaryColor}
+        isSearchable={dropdownIsSearchable}
+        isMultiple={true}
+        autoCloseOnSelect={dropdownAutoCloseOnSelect}
         error={error}
-        primaryColor={primaryColor!}
-        fieldLabelStyle={fieldLabelStyle}
-        fieldDescriptionStyle={fieldDescriptionStyle}
-        fieldErrorMessageStyle={fieldErrorMessageStyle}
-      >
-        <DropDownPicker
-          multiple={true}
-          min={0}
-          max={field.choices?.length}
-          open={open}
-          setOpen={setOpen}
-          value={value || []}
-          setValue={onValueChange!}
-          items={items}
-          setItems={setItems}
-          placeholder={field.placeholder || "Select options"}
-          style={{ borderColor: error ? "red" : inputBorderColor }}
-          dropDownContainerStyle={{ borderColor: error ? "red" : inputBorderColor, ...inputContainerStyle }}
-          listMode={dropdownListMode}
-          theme={dropdownTheme}
-        />
-      </CommonWrapper>
+        helperText={field.description}
+        labelStyle={fieldLabelStyle}
+        placeholderStyle={dropdownPlaceholderStyle}
+        dropdownStyle={{
+          borderColor: error ? "red" : inputBorderColor,
+          ...inputContainerStyle,
+          ...dropdownStyle,
+        }}
+        dropdownContainerStyle={dropdownContainerStyle}
+        dropdownIcon={dropdownIcon}
+        dropdownIconStyle={dropdownIconStyle}
+        selectedItemStyle={dropdownSelectedItemStyle}
+        multipleSelectedItemStyle={dropdownMultipleSelectedItemStyle}
+        dropdownErrorStyle={dropdownErrorStyle}
+        dropdownErrorTextStyle={fieldErrorMessageStyle || dropdownErrorTextStyle}
+        dropdownHelperTextStyle={fieldDescriptionStyle || dropdownHelperTextStyle}
+        listHeaderComponent={
+          <View style={{ paddingHorizontal: 15, marginBottom: 8 }}>
+            <Text style={[{ fontWeight: "bold" }, fieldLabelStyle]}>{field.label}</Text>
+            {field.description && <Text style={fieldDescriptionStyle}>{field.description}</Text>}
+          </View>
+        }
+        listFooterComponent={
+          <View style={{ padding: 10 }}>
+            <Text style={fieldDescriptionStyle}>{multipleSelectionMessage}</Text>
+          </View>
+        }
+        listEmptyComponent={dropdownListEmptyComponent}
+        listComponentStyles={dropdownListComponentStyles}
+        listControls={dropdownListControls}
+        searchControls={dropdownSearchControls}
+        modalControls={dropdownModalControls}
+        checkboxControls={dropdownCheckboxControls}
+      />
     )
   },
 
@@ -481,7 +689,7 @@ export const defaultFieldMapping: FieldMapping = {
 
   // Radio Field
   radio: (props: FieldComponentProps) => {
-    const { field, value, onValueChange, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle } = props
+    const { field, value, onValueChange, error, primaryColor, fieldLabelStyle, fieldDescriptionStyle, fieldErrorMessageStyle, inputTextStyle } = props
     // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
@@ -513,7 +721,7 @@ export const defaultFieldMapping: FieldMapping = {
             >
               {value === choice.value && <View style={{ height: 10, width: 10, borderRadius: 5, backgroundColor: primaryColor }} />}
             </View>
-            <Text style={{ marginLeft: 10 }}>{choice.text}</Text>
+            <Text style={{ marginLeft: 10, ...inputTextStyle }}>{choice.text}</Text>
           </TouchableOpacity>
         ))}
       </CommonWrapper>
@@ -530,9 +738,19 @@ export const defaultFieldMapping: FieldMapping = {
 
     const DescriptionComponent = field.description ? <Text style={[{ marginTop: 3 }, fieldDescriptionStyle]}>{field.description}</Text> : null
 
+    // Define default styles
+    const defaultSectionTitleStyle: TextStyle = {
+      fontWeight: "bold",
+      fontSize: 18,
+      color: primaryColor,
+    }
+
+    // Combine styles with priority: default < fieldLabelStyle < sectionTitleStyle
+    const combinedSectionTitleStyle = [defaultSectionTitleStyle, fieldLabelStyle, sectionTitleStyle]
+
     return (
       <View style={{ marginVertical: 10, borderBottomColor: primaryColor, borderBottomWidth: 1, paddingBottom: 5 }}>
-        <Text style={[{ fontSize: 18, fontWeight: "bold" }, fieldLabelStyle, sectionTitleStyle]}>{field.label}</Text>
+        <Text style={combinedSectionTitleStyle}>{field.label}</Text>
         {descriptionPlacement === "above" && DescriptionComponent}
         {descriptionPlacement === "below" && DescriptionComponent}
       </View>
@@ -552,44 +770,79 @@ export const defaultFieldMapping: FieldMapping = {
       fieldErrorMessageStyle,
       inputBorderColor,
       inputContainerStyle,
-      dropdownListMode,
-      dropdownTheme,
+      // Dropdown props
+      dropdownPlaceholderStyle,
+      dropdownStyle,
+      dropdownContainerStyle,
+      dropdownIcon,
+      dropdownIconStyle,
+      dropdownSelectedItemStyle,
+      dropdownErrorStyle,
+      dropdownErrorTextStyle,
+      dropdownHelperTextStyle,
+      dropdownIsSearchable,
+      dropdownAutoCloseOnSelect,
+      dropdownListEmptyComponent,
+      dropdownPrimaryColor,
+      dropdownListComponentStyles,
+      dropdownListControls,
+      dropdownSearchControls,
+      dropdownModalControls,
+      dropdownCheckboxControls,
     } = props
 
-    // Handle field visibility
     if (field.visibility === "hidden" || field.visibility === "administrative") return null
 
-    const [open, setOpen] = useState(false)
-    const [items, setItems] = useState(
+    const options =
       field.choices?.map((choice) => ({
         label: choice.text,
         value: choice.value,
       })) || []
-    )
+
+    if (!onValueChange) {
+      console.error(`onValueChange is not defined for select field ${field.id}`)
+      return null
+    }
 
     return (
-      <CommonWrapper
-        field={field}
+      <Dropdown
+        label={field.label}
+        placeholder={field.placeholder || "Select an option"}
+        options={options}
+        selectedValue={value}
+        onValueChange={onValueChange}
+        primaryColor={dropdownPrimaryColor || primaryColor}
+        isSearchable={dropdownIsSearchable}
+        autoCloseOnSelect={dropdownAutoCloseOnSelect}
         error={error}
-        primaryColor={primaryColor!}
-        fieldLabelStyle={fieldLabelStyle}
-        fieldDescriptionStyle={fieldDescriptionStyle}
-        fieldErrorMessageStyle={fieldErrorMessageStyle}
-      >
-        <DropDownPicker
-          open={open}
-          setOpen={setOpen}
-          value={value}
-          setValue={onValueChange!}
-          items={items}
-          setItems={setItems}
-          placeholder={field.placeholder || "Select an option"}
-          style={{ borderColor: error ? "red" : inputBorderColor }}
-          dropDownContainerStyle={{ borderColor: error ? "red" : inputBorderColor, ...inputContainerStyle }}
-          listMode={dropdownListMode}
-          theme={dropdownTheme}
-        />
-      </CommonWrapper>
+        helperText={field.description}
+        labelStyle={fieldLabelStyle}
+        placeholderStyle={dropdownPlaceholderStyle}
+        dropdownStyle={{
+          borderColor: error ? "red" : inputBorderColor,
+          ...inputContainerStyle,
+          ...dropdownStyle,
+        }}
+        dropdownContainerStyle={dropdownContainerStyle}
+        dropdownIcon={dropdownIcon}
+        dropdownIconStyle={dropdownIconStyle}
+        selectedItemStyle={dropdownSelectedItemStyle}
+        dropdownErrorStyle={dropdownErrorStyle}
+        dropdownErrorTextStyle={fieldErrorMessageStyle || dropdownErrorTextStyle}
+        dropdownHelperTextStyle={fieldDescriptionStyle || dropdownHelperTextStyle}
+        listHeaderComponent={
+          <View style={{ paddingHorizontal: 15, marginBottom: 8 }}>
+            <Text style={[{ fontWeight: "bold" }, fieldLabelStyle]}>{field.label}</Text>
+            {field.description && <Text style={fieldDescriptionStyle}>{field.description}</Text>}
+          </View>
+        }
+        listEmptyComponent={dropdownListEmptyComponent}
+        listComponentStyles={dropdownListComponentStyles}
+        listControls={dropdownListControls}
+        searchControls={dropdownSearchControls}
+        modalControls={dropdownModalControls}
+        checkboxControls={dropdownCheckboxControls}
+      />
     )
   },
 
@@ -682,6 +935,76 @@ export const defaultFieldMapping: FieldMapping = {
           multiline
           value={value}
           onChangeText={onChangeText!}
+        />
+      </CommonWrapper>
+    )
+  },
+
+  // Time Field
+  time: (props: FieldComponentProps) => {
+    const {
+      field,
+      value,
+      onChangeText,
+      error,
+      primaryColor,
+      fieldLabelStyle,
+      fieldDescriptionStyle,
+      fieldErrorMessageStyle,
+      inputTextStyle,
+      inputBorderColor,
+      inputContainerStyle,
+    } = props
+
+    if (field.visibility === "hidden" || field.visibility === "administrative") return null
+
+    const [isTimePickerVisible, setTimePickerVisibility] = useState(false)
+
+    const showTimePicker = () => {
+      setTimePickerVisibility(true)
+    }
+
+    const hideTimePicker = () => {
+      setTimePickerVisibility(false)
+    }
+
+    const handleConfirm = (date: Date) => {
+      onChangeText!(date.toTimeString().split(" ")[0])
+      hideTimePicker()
+    }
+
+    return (
+      <CommonWrapper
+        field={field}
+        error={error}
+        primaryColor={primaryColor!}
+        fieldLabelStyle={fieldLabelStyle}
+        fieldDescriptionStyle={fieldDescriptionStyle}
+        fieldErrorMessageStyle={fieldErrorMessageStyle}
+      >
+        <TouchableOpacity onPress={showTimePicker}>
+          <TextInput
+            style={[
+              {
+                borderWidth: 1,
+                borderColor: error ? "red" : inputBorderColor,
+                padding: 10,
+                borderRadius: 5,
+              },
+              inputTextStyle,
+              inputContainerStyle,
+            ]}
+            value={value}
+            editable={false}
+            placeholder={field.placeholder || "Select time"}
+          />
+        </TouchableOpacity>
+        <DateTimePickerModal
+          isVisible={isTimePickerVisible}
+          mode="time"
+          onConfirm={handleConfirm}
+          onCancel={hideTimePicker}
+          date={value ? new Date(`1970-01-01T${value}`) : new Date()}
         />
       </CommonWrapper>
     )

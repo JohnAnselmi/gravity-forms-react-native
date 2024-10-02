@@ -1,6 +1,6 @@
 # gravity-forms-react-native
 
-A React Native module for seamlessly integrating Gravity Forms from WordPress into your mobile application.
+A React Native package for seamlessly integrating Gravity Forms from WordPress into your mobile applications. This package provides components to render Gravity Forms, handle form submission, and validate form inputs directly from a React Native app.
 
 ## Table of Contents
 
@@ -12,35 +12,57 @@ A React Native module for seamlessly integrating Gravity Forms from WordPress in
 - [API Client Configuration](#api-client-configuration)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
+- [Supported Field Types](#supported-field-types)
 
 ## Installation
 
-To install the gravity-forms-react-native package, run the following command in your project directory:
+To install the package, run the following command in your React Native project directory:
+
+### If you are using Expo:
 
 ```bash
-npm install gravity-forms-react-native @react-native-picker/picker
+expo install @react-native-community/datetimepicker
+npm install gravity-forms-react-native react-native-input-select react-native-modal-datetime-picker
 ```
 
-or if you're using Yarn:
+or with Yarn:
 
 ```bash
-yarn add gravity-forms-react-native @react-native-picker/picker
+expo install @react-native-community/datetimepicker
+yarn add gravity-forms-react-native react-native-input-select react-native-modal-datetime-picker
 ```
 
-Note: This package has a peer dependency on `@react-native-picker/picker`, which is used for select fields.
+### If you are not using Expo:
+
+```bash
+npm install gravity-forms-react-native @react-native-community/datetimepicker react-native-input-select react-native-modal-datetime-picker
+```
+
+or with Yarn:
+
+```bash
+yarn add gravity-forms-react-native @react-native-community/datetimepicker react-native-input-select react-native-modal-datetime-picker
+```
+
+### Peer Dependencies
+
+Ensure that your project has the following peer dependencies installed:
+
+- `react >=16.8.0`
+- `react-native >=0.60.0`
+- `@react-native-picker/picker >=1.3.0`
+- `@react-native-community/datetimepicker >=6.0.0`
+- `react-native-modal-datetime-picker >=14.0.0`
+
+These are required for rendering various field types (dropdowns, date pickers, etc.).
 
 ## Setup
 
-Before you can use gravity-forms-react-native, you need to set up your WordPress site to allow API access to Gravity Forms.
+Before you can use gravity-forms-react-native, you need to configure your WordPress site to allow API access to Gravity Forms:
 
-1. Install and activate the [Gravity Forms REST API add-on](https://docs.gravityforms.com/rest-api-v2/) on your WordPress site.
-
-2. Generate API credentials:
-
-   - Go to Forms > Settings > REST API in your WordPress admin panel.
-   - Create a new API key with read and write permissions for forms and entries.
-
-3. In your React Native project, configure the API client with your credentials:
+1. Install and activate [Gravity Forms](https://docs.gravityforms.com/) on your WordPress site.
+2. Generate API credentials by going to `Forms > Settings > REST API` in the WordPress admin panel. Enable the API & use API version 2. Assign Read/Write permissions to the key.
+3. Configure the API client in your React Native project:
 
 ```javascript
 import { configureApiClient } from "gravity-forms-react-native"
@@ -52,11 +74,11 @@ configureApiClient({
 })
 ```
 
-It's recommended to do this configuration in your app's entry point (e.g., `App.js` or `index.js`).
+It is recommended to configure the API client at your app's entry point.
 
 ## Usage
 
-Here's a basic example of how to use the `GravityForm` component:
+Here’s a basic example of how to render and submit a Gravity Form:
 
 ```jsx
 import React from "react"
@@ -82,64 +104,90 @@ export default MyFormScreen
 
 The `GravityForm` component accepts the following props:
 
-| Prop Name                  | Type      | Required | Default   | Description                                                           |
-| -------------------------- | --------- | -------- | --------- | --------------------------------------------------------------------- |
-| `formId`                   | number    | Yes      | -         | The ID of the Gravity Form to render                                  |
-| `customFieldMapping`       | object    | No       | `{}`      | Custom field type to component mapping                                |
-| `onSubmit`                 | function  | No       | -         | Callback function called on successful form submission                |
-| `onValidationError`        | function  | No       | -         | Callback function called when form validation fails                   |
-| `containerStyle`           | ViewStyle | No       | -         | Style object for the form container                                   |
-| `primaryColor`             | string    | No       | '#0000ff' | Primary color used for buttons and accents                            |
-| `showFormTitle`            | boolean   | No       | `false`   | Whether to display the form title                                     |
-| `formTitleStyle`           | TextStyle | No       | -         | Style object for the form title                                       |
-| `showFormDescription`      | boolean   | No       | `false`   | Whether to display the form description                               |
-| `formDescriptionStyle`     | TextStyle | No       | -         | Style object for the form description                                 |
-| `formLoadingErrorStyle`    | TextStyle | No       | -         | Style object for the error message when form fails to load            |
-| `confirmationMessageStyle` | TextStyle | No       | -         | Style object for the confirmation message after successful submission |
+| Prop Name                           | Type             | Required | Default   | Description                                                                     |
+| ----------------------------------- | ---------------- | -------- | --------- | ------------------------------------------------------------------------------- |
+| `formId`                            | number           | Yes      | -         | The ID of the Gravity Form to render.                                           |
+| `customFieldMapping`                | object           | No       | `{}`      | Custom mapping for field types to React Native components.                      |
+| `onSubmit`                          | function         | No       | -         | Callback function triggered on successful form submission.                      |
+| `onValidationError`                 | function         | No       | -         | Callback function triggered when form validation fails.                         |
+| `containerStyle`                    | ViewStyle        | No       | -         | Style for the form container.                                                   |
+| `primaryColor`                      | string           | No       | '#0000ff' | Primary color for buttons and accents.                                          |
+| `showFormTitle`                     | boolean          | No       | `false`   | Whether to display the form title.                                              |
+| `formTitleStyle`                    | TextStyle        | No       | -         | Style for the form title.                                                       |
+| `showFormDescription`               | boolean          | No       | `false`   | Whether to display the form description.                                        |
+| `formDescriptionStyle`              | TextStyle        | No       | -         | Style for the form description.                                                 |
+| `formErrorStyle`                    | TextStyle        | No       | -         | Style for the error message when the form fails to load.                        |
+| `confirmationMessageStyle`          | TextStyle        | No       | -         | Style for the confirmation message after successful submission.                 |
+| `fieldLabelStyle`                   | TextStyle        | No       | -         | Style for the label of each field.                                              |
+| `fieldDescriptionStyle`             | TextStyle        | No       | -         | Style for the description of each field.                                        |
+| `fieldErrorMessageStyle`            | TextStyle        | No       | -         | Style for the error messages for individual fields.                             |
+| `fieldValidationMessageStyle`       | TextStyle        | No       | -         | Style for validation messages (e.g., for invalid emails, numbers, etc.).        |
+| `inputTextStyle`                    | TextStyle        | No       | -         | Style for the text inside input fields.                                         |
+| `inputBorderColor`                  | string           | No       | '#ccc'    | Border color for input fields.                                                  |
+| `inputContainerStyle`               | ViewStyle        | No       | -         | Style for the container around input fields.                                    |
+| `dropdownPlaceholderStyle`          | TextStyle        | No       | -         | Style for the dropdown placeholder text.                                        |
+| `dropdownStyle`                     | ViewStyle        | No       | -         | Style for the dropdown component.                                               |
+| `dropdownContainerStyle`            | ViewStyle        | No       | -         | Style for the container around the dropdown component.                          |
+| `dropdownIcon`                      | ReactNode        | No       | -         | Custom icon for the dropdown.                                                   |
+| `dropdownIconStyle`                 | ViewStyle        | No       | -         | Style for the dropdown icon.                                                    |
+| `dropdownSelectedItemStyle`         | TextStyle        | No       | -         | Style for the selected item in the dropdown.                                    |
+| `dropdownMultipleSelectedItemStyle` | ViewStyle        | No       | -         | Style for multiple selected items in the dropdown.                              |
+| `dropdownErrorStyle`                | ViewStyle        | No       | -         | Style for the dropdown error container.                                         |
+| `dropdownErrorTextStyle`            | TextStyle        | No       | -         | Style for the dropdown error text.                                              |
+| `dropdownHelperTextStyle`           | TextStyle        | No       | -         | Style for helper text in dropdown fields.                                       |
+| `dropdownIsSearchable`              | boolean          | No       | -         | Whether the dropdown supports searching.                                        |
+| `dropdownAutoCloseOnSelect`         | boolean          | No       | -         | Whether the dropdown should auto-close on selecting an item.                    |
+| `dropdownListEmptyComponent`        | ReactNode        | No       | -         | Custom component to display when the dropdown list is empty.                    |
+| `dropdownPrimaryColor`              | string           | No       | -         | Primary color for the dropdown.                                                 |
+| `dropdownListComponentStyles`       | object           | No       | -         | Additional styles for dropdown list components, such as empty list and headers. |
+| `dropdownListControls`              | object           | No       | -         | Controls for selecting all/unselecting all options in a multiselect dropdown.   |
+| `dropdownSearchControls`            | object           | No       | -         | Controls for managing search input inside a searchable dropdown.                |
+| `dropdownModalControls`             | object           | No       | -         | Controls for the modal that wraps a dropdown in certain cases.                  |
+| `dropdownCheckboxControls`          | object           | No       | -         | Controls for managing checkboxes in multiselect dropdowns.                      |
+| `submitButtonContainerStyle`        | ViewStyle        | No       | -         | Style for the submit button container.                                          |
+| `submitButtonTextStyle`             | TextStyle        | No       | -         | Style for the submit button text.                                               |
+| `loadingTextStyle`                  | TextStyle        | No       | -         | Style for the text displayed while the form is loading.                         |
+| `loadingSpinnerStyle`               | ViewStyle        | No       | -         | Style for the loading spinner.                                                  |
+| `loadingSpinnerColor`               | string           | No       | -         | Color for the loading spinner.                                                  |
+| `loadingSpinnerSize`                | string or number | No       | "small"   | Size of the loading spinner (`small`, `large`, or a numeric size).              |
+| `loadingComponent`                  | ReactNode        | No       | -         | Custom component to display while the form is loading.                          |
+| `multipleSelectionMessage`          | string           | No       | -         | Message to display for multi-selection fields (e.g., checkboxes).               |
 
 ## Custom Field Mapping
 
-You can create custom components for specific field types or override the default ones. Here's how to create and use a custom field mapping:
+You can map your own components to custom field types or override the default ones provided by the package.
 
-1. Create your custom field component:
+1. Create a custom field component:
 
 ```jsx
 import React from "react"
 import { TextInput } from "react-native"
 
-const MyCustomTextField = ({ field, value, onChangeText, error }) => (
+const CustomTextField = ({ field, value, onChangeText, error }) => (
   <TextInput value={value} onChangeText={onChangeText} placeholder={field.label} style={{ borderColor: error ? "red" : "gray", borderWidth: 1 }} />
 )
 
-export default MyCustomTextField
+export default CustomTextField
 ```
 
-2. Create a custom field mapping object:
+2. Define the custom field mapping:
 
 ```javascript
-import MyCustomTextField from "./MyCustomTextField"
-
 const customFieldMapping = {
-  text: MyCustomTextField,
-  // Add more custom mappings as needed
+  text: CustomTextField,
+  // Other field mappings as needed
 }
 ```
 
-3. Pass the custom field mapping to the `GravityForm` component:
+3. Use the custom mapping in the `GravityForm` component:
 
 ```jsx
-<GravityForm
-  formId={1}
-  customFieldMapping={customFieldMapping}
-  // ... other props
-/>
+<GravityForm formId={1} customFieldMapping={customFieldMapping} />
 ```
-
-You can override any of the default field types: `text`, `textarea`, `select`, `checkbox`, `radio`, `name`, `address`, `phone`, etc.
 
 ## API Client Configuration
 
-The `createApiClient` function is used internally to communicate with your WordPress site's Gravity Forms API. You can configure it globally using the `configureApiClient` function:
+To connect with the Gravity Forms API, you need to configure the API client. This is done globally using the `configureApiClient` function:
 
 ```javascript
 import { configureApiClient } from "gravity-forms-react-native"
@@ -151,28 +199,55 @@ configureApiClient({
 })
 ```
 
-Make sure to call this function before rendering any `GravityForm` components.
+Make sure to call this before rendering any `GravityForm` components.
 
 ## Troubleshooting
 
-Here are some common issues and their solutions:
+1. **Form doesn’t load**: Double-check the API credentials and ensure the form ID exists in your WordPress site.
+2. **Field rendering issues**: Ensure custom field mappings are provided for unsupported field types.
+3. **Form submission fails**: Ensure your WordPress site is accessible and the Gravity Forms REST API is correctly set up.
 
-1. **Form doesn't load**: Ensure that your API credentials are correct and that the form ID exists on your WordPress site.
+For additional issues, check the [issues page](https://github.com/yourusername/gravity-forms-react-native/issues) or create a new issue.
 
-2. **Fields not rendering correctly**: Check if you need to provide custom field mappings for any special field types used in your form.
+## Supported Field Types
 
-3. **Submission fails**: Verify that your WordPress site is accessible and that the Gravity Forms REST API add-on is active.
+The following Gravity Forms field types are supported:
 
-4. **Validation errors**: Make sure all required fields are filled and that the data matches the expected format for each field type.
+- `text`
+- `textarea`
+- `select`
+- `multiselect`
+- `checkbox`
+- `radio`
+- `name`
+- `address`
+- `phone`
+- `email`
+- `website`
+- `number`
+- `list`
+- `date`
+- `time`
 
-If you encounter any other issues, please check the [issues page](https://github.com/yourusername/gravity-forms-react-native/issues) on GitHub or create a new issue if your problem isn't already reported.
+### Unsupported Fields
+
+At this time, the following fields will not render in the form:
+
+- `html` (future support planned)
+- `page` (future support planned)
+- `captcha` (maybe?)
+
+The following fields will cause an error if used in a form rendered with `gravity-forms-react-native`:
+
+- Payment fields (e.g., product, total, credit card) (no support planned)
+- Post fields (e.g., post title, post content, post category) (future support planned)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! To contribute:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Clone the repository.
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.

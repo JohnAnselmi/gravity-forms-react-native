@@ -1,7 +1,22 @@
-import { TextStyle, ViewStyle } from "react-native"
-import { ListModeType, ThemeNameType as DropdownThemeNameType } from "react-native-dropdown-picker"
+import { ColorValue, ModalProps, TextInputProps, TextStyle, ViewStyle } from "react-native"
 
-export type GravityFormFieldType = string
+export type GravityFormFieldType =
+  | "text"
+  | "textarea"
+  | "select"
+  | "multiselect"
+  | "checkbox"
+  | "radio"
+  | "name"
+  | "address"
+  | "phone"
+  | "email"
+  | "website"
+  | "number"
+  | "date"
+  | "time"
+  | "list"
+
 export interface GravityFormFieldInput {
   id: string
   label: string
@@ -52,6 +67,8 @@ export interface GravityFormField {
   rangeMin?: string
   rangeMax?: string
   checkboxLabel?: string
+  enableColumns?: boolean
+  maxRows?: number
 }
 
 export interface GravityFormObject {
@@ -138,8 +155,53 @@ export interface GravityFormProps {
   inputTextStyle?: TextStyle
   inputBorderColor?: string
   inputContainerStyle?: ViewStyle
-  dropdownListMode?: ListModeType
-  dropdownTheme?: DropdownThemeNameType
+  // Dropdown styling props (prefixed with 'dropdown')
+  dropdownPlaceholderStyle?: TextStyle
+  dropdownStyle?: ViewStyle
+  dropdownContainerStyle?: ViewStyle
+  dropdownIcon?: React.ReactNode
+  dropdownIconStyle?: ViewStyle
+  dropdownSelectedItemStyle?: TextStyle
+  dropdownMultipleSelectedItemStyle?: ViewStyle
+  dropdownErrorStyle?: ViewStyle
+  dropdownErrorTextStyle?: TextStyle
+  dropdownHelperTextStyle?: TextStyle
+  dropdownIsSearchable?: boolean
+  dropdownAutoCloseOnSelect?: boolean
+  dropdownListEmptyComponent?: React.ReactNode
+  dropdownPrimaryColor?: string
+  dropdownListComponentStyles?: {
+    listEmptyComponentStyle?: ViewStyle
+    itemSeparatorStyle?: ViewStyle
+    sectionHeaderStyle?: ViewStyle
+  }
+  dropdownListControls?: {
+    selectAllText?: string
+    unselectAllText?: string
+    selectAllCallback?: () => void
+    unselectAllCallback?: () => void
+    hideSelectAll?: boolean
+    emptyListMessage?: string
+  }
+  dropdownSearchControls?: {
+    textInputStyle?: TextStyle
+    textInputContainerStyle?: ViewStyle
+    textInputProps?: TextInputProps
+    searchCallback?: (value: string) => void
+  }
+  dropdownModalControls?: {
+    modalBackgroundStyle?: ViewStyle
+    modalOptionsContainerStyle?: ViewStyle
+    modalProps?: ModalProps
+  }
+  dropdownCheckboxControls?: {
+    checkboxSize?: number
+    checkboxStyle?: ViewStyle
+    checkboxLabelStyle?: TextStyle
+    checkboxComponent?: React.ReactNode
+    checkboxDisabledStyle?: ViewStyle
+    checkboxUnselectedColor?: ColorValue
+  }
   submitButtonContainerStyle?: ViewStyle
   submitButtonTextStyle?: TextStyle
   loadingTextStyle?: TextStyle
@@ -147,6 +209,7 @@ export interface GravityFormProps {
   loadingSpinnerColor?: string
   loadingSpinnerSize?: number | "small" | "large"
   loadingComponent?: React.ReactNode
+  multipleSelectionMessage?: string
 }
 
 export interface FieldComponentProps {
@@ -164,8 +227,54 @@ export interface FieldComponentProps {
   inputTextStyle?: TextStyle
   inputBorderColor?: string
   inputContainerStyle?: ViewStyle
-  dropdownListMode?: ListModeType
-  dropdownTheme?: DropdownThemeNameType
+  // Dropdown styling props (prefixed with 'dropdown')
+  dropdownPlaceholderStyle?: TextStyle
+  dropdownStyle?: ViewStyle
+  dropdownContainerStyle?: ViewStyle
+  dropdownIcon?: React.ReactNode
+  dropdownIconStyle?: ViewStyle
+  dropdownSelectedItemStyle?: TextStyle
+  dropdownMultipleSelectedItemStyle?: ViewStyle
+  dropdownErrorStyle?: ViewStyle
+  dropdownErrorTextStyle?: TextStyle
+  dropdownHelperTextStyle?: TextStyle
+  dropdownIsSearchable?: boolean
+  dropdownAutoCloseOnSelect?: boolean
+  dropdownListEmptyComponent?: React.ReactNode
+  dropdownPrimaryColor?: string
+  dropdownListComponentStyles?: {
+    listEmptyComponentStyle?: ViewStyle
+    itemSeparatorStyle?: ViewStyle
+    sectionHeaderStyle?: ViewStyle
+  }
+  dropdownListControls?: {
+    selectAllText?: string
+    unselectAllText?: string
+    selectAllCallback?: () => void
+    unselectAllCallback?: () => void
+    hideSelectAll?: boolean
+    emptyListMessage?: string
+  }
+  dropdownSearchControls?: {
+    textInputStyle?: TextStyle
+    textInputContainerStyle?: ViewStyle
+    textInputProps?: TextInputProps
+    searchCallback?: (value: string) => void
+  }
+  dropdownModalControls?: {
+    modalBackgroundStyle?: ViewStyle
+    modalOptionsContainerStyle?: ViewStyle
+    modalProps?: ModalProps
+  }
+  dropdownCheckboxControls?: {
+    checkboxSize?: number
+    checkboxStyle?: ViewStyle
+    checkboxLabelStyle?: TextStyle
+    checkboxComponent?: React.ReactNode
+    checkboxDisabledStyle?: ViewStyle
+    checkboxUnselectedColor?: ColorValue
+  }
+  multipleSelectionMessage?: string
   [key: string]: any
 }
 

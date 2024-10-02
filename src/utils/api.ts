@@ -1,9 +1,25 @@
-import axios from "axios"
 import { GravityFormsApiClient, GravityFormSubmission } from "../types"
+
+// Custom base64 encoding function without dependencies
+const base64Encode = (str: string): string => {
+  const b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  let result = ""
+  let i = 0
+  do {
+    const a = str.charCodeAt(i++)
+    const b = str.charCodeAt(i++)
+    const c = str.charCodeAt(i++)
+    result += b64chars.charAt(a >> 2)
+    result += b64chars.charAt(((a & 3) << 4) | ((b || 0) >> 4))
+    result += b ? b64chars.charAt(((b & 15) << 2) | ((c || 0) >> 6)) : "="
+    result += b ? (c ? b64chars.charAt(c & 63) : "=") : "="
+  } while (i < str.length)
+  return result
+}
 
 // Helper function to create Basic Auth headers
 const createBasicAuthHeader = (consumerKey: string, consumerSecret: string) => {
-  const token = btoa(`${consumerKey}:${consumerSecret}`)
+  const token = base64Encode(`${consumerKey}:${consumerSecret}`)
   return `Basic ${token}`
 }
 
@@ -13,30 +29,42 @@ export const configureApiClient = (config: { baseUrl: string; consumerKey: strin
   globalApiConfig = config
 }
 
-export const createApiClient = (): GravityFormsApiClient => {
+const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   const { baseUrl, consumerKey, consumerSecret } = globalApiConfig
-  const client = axios.create({
-    baseURL: `${baseUrl}/wp-json/gf/v2`,
-    headers: {
-      Authorization: createBasicAuthHeader(consumerKey, consumerSecret),
-      "Content-Type": "application/json",
-    },
+  const headers = new Headers(options.headers)
+  headers.set("Authorization", createBasicAuthHeader(consumerKey, consumerSecret))
+  headers.set("Content-Type", "application/json")
+
+  const response = await fetch(`${baseUrl}/wp-json/gf/v2${url}`, {
+    ...options,
+    headers,
   })
 
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+export const createApiClient = (): GravityFormsApiClient => {
   const fetchGravityForm = async (formId: number) => {
-    const response = await client.get(`/forms/${formId}`)
-    return response.data
+    return fetchWithAuth(`/forms/${formId}`)
   }
 
   const submitGravityForm = async (formId: number, formData: Record<string, any>): Promise<GravityFormSubmission> => {
     console.log("Submitting data within submitGravityForm function...", formData)
-    const response = await client.post(`/forms/${formId}/submissions`, formData)
-    return response.data
+    return fetchWithAuth(`/forms/${formId}/submissions`, {
+      method: "POST",
+      body: JSON.stringify(formData),
+    })
   }
 
   const validateGravityForm = async (formId: number, formData: Record<string, any>): Promise<GravityFormSubmission> => {
-    const response = await client.post(`/forms/${formId}/submissions/validation`, formData)
-    return response.data
+    return fetchWithAuth(`/forms/${formId}/submissions/validation`, {
+      method: "POST",
+      body: JSON.stringify(formData),
+    })
   }
 
   return { fetchGravityForm, submitGravityForm, validateGravityForm }
