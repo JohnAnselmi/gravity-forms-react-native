@@ -467,7 +467,7 @@ export const defaultFieldMapping: FieldMapping = {
         autoCloseOnSelect={dropdownAutoCloseOnSelect}
         error={error}
         helperText={field.description}
-        labelStyle={fieldLabelStyle}
+        labelStyle={{ fontWeight: "bold", marginBottom: 5, ...fieldLabelStyle }}
         placeholderStyle={dropdownPlaceholderStyle}
         dropdownStyle={{
           borderColor: error ? "red" : inputBorderColor,
@@ -814,7 +814,7 @@ export const defaultFieldMapping: FieldMapping = {
         autoCloseOnSelect={dropdownAutoCloseOnSelect}
         error={error}
         helperText={field.description}
-        labelStyle={fieldLabelStyle}
+        labelStyle={{ fontWeight: "bold", marginBottom: 5, ...fieldLabelStyle }}
         placeholderStyle={dropdownPlaceholderStyle}
         dropdownStyle={{
           borderColor: error ? "red" : inputBorderColor,
