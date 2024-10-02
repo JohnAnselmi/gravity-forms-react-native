@@ -1,10 +1,33 @@
 {
   "name": "gravity-forms-react-native",
   "version": "0.9.4",
+  "description": "A React Native package for seamlessly integrating Gravity Forms from WordPress into your mobile applications.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JohnAnselmi/gravity-forms-react-native.git"
+  },
+  "keywords": [
+    "react-native",
+    "gravity-forms",
+    "wordpress",
+    "form"
+  ],
+  "author": {
+    "name": "John Anselmi",
+    "email": "john@sensibleentertainment.com",
+    "url": "https://johnanselmi.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JohnAnselmi/gravity-forms-react-native/issues"
+  },
+  "homepage": "https://github.com/JohnAnselmi/gravity-forms-react-native",
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-native": ">=0.60.0",
@@ -23,6 +46,7 @@
   "files": [
     "dist/",
     "README.md",
+    "LICENSE",
     "package.json"
   ]
 }
