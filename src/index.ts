@@ -3,5 +3,6 @@ export { GravityForm }
 export { createFieldMapping } from "./components/FieldMapping"
 export { createApiClient, configureApiClient } from "./utils/api"
 export * from "./types"
-
 export const createCustomField = (Component: React.ComponentType<any>) => Component
+
+//TODO: Heavily Test Custom Fields and Custom Field Handlers

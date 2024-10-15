@@ -31,7 +31,7 @@ export enum GravityFormFieldType {
 }
 
 export interface GravityFormFieldInput {
-  id: string
+  id: string | number
   label: string
   name?: string
   autocompleteAttribute?: string
@@ -41,7 +41,7 @@ export interface GravityFormFieldInput {
 }
 
 export interface GravityFormField {
-  id: string
+  id: number
   formId: number
   type: string
   label: string
@@ -147,6 +147,12 @@ export interface GravityFormSubmission {
   resume_token?: string
 }
 
+export interface UserFriendlySubmissionField {
+  input: string
+  name: string
+  value: any
+}
+
 export interface GravityFormProps {
   formId: number
   customFieldMapping?: FieldMapping
@@ -166,10 +172,10 @@ export interface GravityFormProps {
   fieldValidationMessageStyle?: TextStyle
   sectionTitleStyle?: TextStyle
   inputTextStyle?: TextStyle
+  inputPlaceholderStyle?: TextStyle
   inputBorderColor?: string
   inputContainerStyle?: ViewStyle
   // Dropdown styling props (prefixed with 'dropdown')
-  dropdownPlaceholderStyle?: TextStyle
   dropdownStyle?: ViewStyle
   dropdownContainerStyle?: ViewStyle
   dropdownIcon?: React.ReactNode
@@ -178,11 +184,9 @@ export interface GravityFormProps {
   dropdownMultipleSelectedItemStyle?: ViewStyle
   dropdownErrorStyle?: ViewStyle
   dropdownErrorTextStyle?: TextStyle
-  dropdownHelperTextStyle?: TextStyle
   dropdownIsSearchable?: boolean
   dropdownAutoCloseOnSelect?: boolean
   dropdownListEmptyComponent?: React.ReactNode
-  dropdownPrimaryColor?: string
   dropdownListComponentStyles?: {
     listEmptyComponentStyle?: ViewStyle
     itemSeparatorStyle?: ViewStyle
@@ -223,6 +227,19 @@ export interface GravityFormProps {
   loadingSpinnerSize?: number | "small" | "large"
   loadingComponent?: React.ReactNode
   multipleSelectionMessage?: string
+  dateFormat?: string
+  timeFormat?: string
+  showSubmittedAnswers?: boolean
+  customSubmittedDataTitle?: string
+  submittedDataQuestionStyle?: TextStyle
+  submittedDataAnswerStyle?: TextStyle
+  customConfirmationComponent?: React.ComponentType<{
+    message: string
+    formData: Record<string, any>
+    userFriendlyData: Record<string, any>
+  }>
+  customSubmissionOverlayComponent?: React.ReactNode
+  customFieldHandlers?: CustomFieldHandlers;
 }
 
 export interface FieldComponentProps {
@@ -238,10 +255,10 @@ export interface FieldComponentProps {
   fieldValidationMessageStyle?: TextStyle
   sectionTitleStyle?: TextStyle
   inputTextStyle?: TextStyle
+  inputPlaceholderStyle?: TextStyle
   inputBorderColor?: string
   inputContainerStyle?: ViewStyle
   // Dropdown styling props (prefixed with 'dropdown')
-  dropdownPlaceholderStyle?: TextStyle
   dropdownStyle?: ViewStyle
   dropdownContainerStyle?: ViewStyle
   dropdownIcon?: React.ReactNode
@@ -250,11 +267,9 @@ export interface FieldComponentProps {
   dropdownMultipleSelectedItemStyle?: ViewStyle
   dropdownErrorStyle?: ViewStyle
   dropdownErrorTextStyle?: TextStyle
-  dropdownHelperTextStyle?: TextStyle
   dropdownIsSearchable?: boolean
   dropdownAutoCloseOnSelect?: boolean
   dropdownListEmptyComponent?: React.ReactNode
-  dropdownPrimaryColor?: string
   dropdownListComponentStyles?: {
     listEmptyComponentStyle?: ViewStyle
     itemSeparatorStyle?: ViewStyle
@@ -288,6 +303,8 @@ export interface FieldComponentProps {
     checkboxUnselectedColor?: ColorValue
   }
   multipleSelectionMessage?: string
+  dateFormat?: string
+  timeFormat?: string
   [key: string]: any
 }
 
@@ -305,3 +322,13 @@ export type GravityFormVisibility = "visible" | "hidden" | "administrative"
 export type GravityFormLabelPlacement = "top_label" | "left_label" | "right_label"
 export type GravityFormDescriptionPlacement = "below" | "above"
 export type GravityFormSubLabelPlacement = "below" | "above"
+
+// Add this to the existing types
+export interface CustomFieldHandler {
+  formatValue: (value: any, field: GravityFormField) => any;
+  formatUserFriendlyValue: (value: any, field: GravityFormField) => string;
+}
+
+export interface CustomFieldHandlers {
+  [fieldType: string]: CustomFieldHandler;
+}
