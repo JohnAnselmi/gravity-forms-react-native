@@ -171,7 +171,7 @@ const GravityForm: React.FC<GravityFormProps> = ({
             tempUserFriendlyData.push({
               input: `input_${fieldId}_1`,
               name: fieldLabel,
-              value: value?.checked ? `Consented to: ${value.label}` : `No Consent Given for: ${value.label}`,
+              value: value?.checked ? `Consented to: ${value.label}` : `No Answer`,
             })
             break
 
@@ -471,7 +471,7 @@ const GravityForm: React.FC<GravityFormProps> = ({
 
     return (
       <View style={containerStyle}>
-        <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 3, ...loadingSpinnerStyle }}>
+        <View style={{ flexGrow: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 3, ...loadingSpinnerStyle }}>
           <ActivityIndicator size={loadingSpinnerSize} color={loadingSpinnerColor || primaryColor} />
           <Text style={loadingTextStyle}>Loading form...</Text>
         </View>
