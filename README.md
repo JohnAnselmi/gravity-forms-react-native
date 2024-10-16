@@ -1,6 +1,6 @@
 # gravity-forms-react-native
 
-A React Native package for seamlessly integrating Gravity Forms from WordPress into your mobile applications. This package provides components to render Gravity Forms, handle form submission, and validate form inputs directly from a React Native app.
+Integrate Gravity Forms into your React Native application. This package renders forms, handles form submissions, and validates form inputs using React Native core components where possible (third party libraries are used for some components, like date pickers and dropdowns).
 
 ## Table of Contents
 
@@ -10,6 +10,7 @@ A React Native package for seamlessly integrating Gravity Forms from WordPress i
 - [Props](#props)
 - [Supported Field Types](#supported-field-types)
 - [Custom Field Mapping](#custom-field-mapping)
+- [Custom Field Handlers](#custom-field-handlers)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
@@ -55,7 +56,7 @@ Ensure that your project has the following peer dependencies installed:
 - `react-native-modal-datetime-picker >=14.0.0`
 - `date-fns >=4.1.0`
 
-These are required for rendering various field types (dropdowns, date pickers, etc.). You could also use your own components for these fields if you want to specifically avoid any of these dependencies. These are for date, time, select, and multiselect fields. All other default fields only depend on React Native core components.
+These are required for rendering various field types (dropdowns, date pickers, etc.). You could also use your own components for these fields if you want to specifically avoid any of these dependencies. These are for date, time, select, and multiselect fields. All other default fields only depend on React Native core components. Thanks to all the devs of these packages for making this much easier.
 
 ## Setup
 
@@ -160,6 +161,7 @@ The `GravityForm` component accepts the following props:
 | `submittedDataAnswerStyle`          | TextStyle        | No       | -         | Style for the answer text in the submitted data section.                      |
 | `customConfirmationComponent`       | ReactNode        | No       | -         | Custom component to display after form submission.                            |
 | `customSubmissionOverlayComponent`  | ReactNode        | No       | -         | Custom component to display while the form is submitting.                     |
+| `customFieldHandlers`               | object           | No       | -         | Custom handlers for formatting field values before submission.                |
 
 ## Supported Field Types
 
@@ -183,6 +185,15 @@ The following Gravity Forms field types are supported:
 - Consent
 - Section
 
+The following field types are not supported and will not be rendered:
+
+- Page (future support planned. Feel free to contribute!)
+- HTML (future support planned. Feel free to contribute!)
+- File Upload (future support planned. Feel free to contribute!)
+- Captcha
+- Payment Fields
+- Post Fields
+
 ## Custom Field Mapping
 
 You can map your own components from a UI library to custom field types or override the default ones. Here's an example using a hypothetical UI library called "MyUILibrary":
@@ -202,6 +213,53 @@ const customFieldMapping = {
 <GravityForm formId={1} customFieldMapping={customFieldMapping} />
 ```
 
+## Custom Field Handlers
+
+You can also provide custom handlers for specific field types. Here is the type for a custom field handler:
+
+```jsx
+export interface CustomFieldHandler {
+  formatValue: (value: any, field: GravityFormField) => any
+  formatUserFriendlyValue: (value: any, field: GravityFormField) => string
+}
+```
+
+For example, you can create a custom handler for the `Date` field:
+
+```jsx
+import { createCustomFieldHandler } from "gravity-forms-react-native"
+
+const customDateHandler = createCustomFieldHandler(customDateField, {
+  formatValue: (value, field) => {
+    return value ? format(value, "yyyy-MM-dd") : null
+  },
+  formatUserFriendlyValue: (value, field) => {
+    return value ? format(value, "MMM d, yyyy") : "No Date Provided"
+  },
+})
+
+<GravityForm formId={1} customFieldMapping={{ date: customDateField }} customFieldHandlers={{ date: customDateHandler }} />
+```
+
+If you don't submit a custom field handler for a field type, the deafault will be used:
+
+```jsx
+if (value) {
+  formattedData[`input_${fieldId}`] = value
+  tempUserFriendlyData.push({
+    input: `input_${fieldId}`,
+    name: fieldLabel,
+    value: value,
+  })
+} else {
+  tempUserFriendlyData.push({
+    input: `input_${fieldId}`,
+    name: fieldLabel,
+    value: "No Answer",
+  })
+}
+```
+
 ## Troubleshooting
 
 1. **Form doesn't load**: Double-check the API credentials and ensure the form ID exists in your WordPress site.
@@ -214,9 +272,9 @@ For additional issues, check the [issues page](https://github.com/JohnAnselmi/gr
 
 Contributions are welcome! To contribute:
 
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add AmazingFeature'`).
+1. Clone the repository (`git clone https://github.com/JohnAnselmi/gravity-forms-react-native.git`).
+2. Create a new branch for your feature (`git checkout -b feature/AmazingFeature`).
+3. Make your changes and commit them (`git commit -m 'Add AmazingFeature'`).
 4. Push to the branch (`git push origin feature/AmazingFeature`).
 5. Open a Pull Request.
 
