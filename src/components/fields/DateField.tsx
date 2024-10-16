@@ -30,9 +30,9 @@ const DateField: React.FC<FieldComponentProps> = (props) => {
   const hideDatePicker = () => setDatePickerVisibility(false)
 
   const handleConfirm = (date: Date) => {
+    hideDatePicker()
     const formattedDate = format(date, dateFormat)
     onChangeText!(formattedDate)
-    hideDatePicker()
   }
 
   return (

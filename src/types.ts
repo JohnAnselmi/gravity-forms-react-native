@@ -239,7 +239,7 @@ export interface GravityFormProps {
     userFriendlyData: Record<string, any>
   }>
   customSubmissionOverlayComponent?: React.ReactNode
-  customFieldHandlers?: CustomFieldHandlers;
+  customFieldHandlers?: CustomFieldHandlers
 }
 
 export interface FieldComponentProps {
@@ -312,6 +312,15 @@ export interface FieldMapping {
   [key: string]: React.FC<FieldComponentProps>
 }
 
+export interface CustomFieldHandler {
+  formatValue: (value: any, field: GravityFormField) => any
+  formatUserFriendlyValue: (value: any, field: GravityFormField) => string
+}
+
+export interface CustomFieldHandlers {
+  [fieldType: string]: CustomFieldHandler
+}
+
 export interface GravityFormsApiClient {
   fetchGravityForm: (formId: number) => Promise<GravityFormObject>
   submitGravityForm: (formId: number, formData: Record<string, any>) => Promise<GravityFormSubmission>
@@ -322,13 +331,3 @@ export type GravityFormVisibility = "visible" | "hidden" | "administrative"
 export type GravityFormLabelPlacement = "top_label" | "left_label" | "right_label"
 export type GravityFormDescriptionPlacement = "below" | "above"
 export type GravityFormSubLabelPlacement = "below" | "above"
-
-// Add this to the existing types
-export interface CustomFieldHandler {
-  formatValue: (value: any, field: GravityFormField) => any;
-  formatUserFriendlyValue: (value: any, field: GravityFormField) => string;
-}
-
-export interface CustomFieldHandlers {
-  [fieldType: string]: CustomFieldHandler;
-}
