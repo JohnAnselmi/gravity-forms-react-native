@@ -56,6 +56,8 @@ const GravityForm: React.FC<GravityFormProps> = ({
   multipleSelectionMessage = "You can select multiple options",
   dateFormat = "PPP",
   timeFormat = "pp",
+  showConfirmationScreen = true,
+  customConfirmationAction,
   showSubmittedAnswers = true,
   customSubmittedDataTitle,
   submittedDataQuestionStyle,
@@ -335,7 +337,15 @@ const GravityForm: React.FC<GravityFormProps> = ({
         } else {
           setConfirmationMessage("Form submitted successfully!")
         }
+
         onSubmit?.(userFriendlyData)
+
+        if (customConfirmationAction) {
+          customConfirmationAction(formData)
+          if (!showConfirmationScreen) {
+            setConfirmationMessage(null)
+          }
+        }
       } else {
         handleSubmissionErrors(submitResponse.validation_messages || {})
       }
@@ -477,6 +487,10 @@ const GravityForm: React.FC<GravityFormProps> = ({
         </View>
       </View>
     )
+  }
+
+  if (confirmationMessage && !showConfirmationScreen && !customConfirmationAction) {
+    return null
   }
 
   if (confirmationMessage) {

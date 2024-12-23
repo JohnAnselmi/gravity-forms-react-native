@@ -229,6 +229,8 @@ export interface GravityFormProps {
   multipleSelectionMessage?: string
   dateFormat?: string
   timeFormat?: string
+  showConfirmationScreen?: boolean
+  customConfirmationAction?: (formData: Record<string, any>) => void
   showSubmittedAnswers?: boolean
   customSubmittedDataTitle?: string
   submittedDataQuestionStyle?: TextStyle

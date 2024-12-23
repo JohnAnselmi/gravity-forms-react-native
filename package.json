@@ -1,6 +1,6 @@
 {
   "name": "gravity-forms-react-native",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A React Native package for seamlessly integrating Gravity Forms from WordPress into your mobile applications.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
