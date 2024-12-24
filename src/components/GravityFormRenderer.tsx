@@ -338,10 +338,10 @@ const GravityForm: React.FC<GravityFormProps> = ({
           setConfirmationMessage("Form submitted successfully!")
         }
 
-        onSubmit?.(userFriendlyData)
+        onSubmit?.(userFriendlyData, submitResponse.entry_id)
 
         if (customConfirmationAction) {
-          customConfirmationAction(formData)
+          customConfirmationAction(formData, submitResponse.entry_id)
           if (!showConfirmationScreen) {
             setConfirmationMessage(null)
           }

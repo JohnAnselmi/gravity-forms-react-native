@@ -155,6 +155,8 @@ The `GravityForm` component accepts the following props:
 | `multipleSelectionMessage`          | string           | No       | -         | Message to display for multi-selection fields.                                |
 | `dateFormat`                        | string           | No       | "PPP"     | Format for date fields (using date-fns format).                               |
 | `timeFormat`                        | string           | No       | "pp"      | Format for time fields (using date-fns format).                               |
+| `showConfirmationScreen`            | boolean          | No       | true      | Whether to show a confirmation screen after form submission.                  |
+| `customConfirmationAction`          | function         | No       | -         | Custom action to perform after form submission.                               |
 | `showSubmittedAnswers`              | boolean          | No       | true      | Whether to show submitted answers after form submission.                      |
 | `customSubmittedDataTitle`          | string           | No       | -         | Custom title for the submitted data section.                                  |
 | `submittedDataQuestionStyle`        | TextStyle        | No       | -         | Style for the question text in the submitted data section.                    |

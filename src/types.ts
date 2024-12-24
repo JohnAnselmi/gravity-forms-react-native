@@ -156,7 +156,7 @@ export interface UserFriendlySubmissionField {
 export interface GravityFormProps {
   formId: number
   customFieldMapping?: FieldMapping
-  onSubmit?: (data: any) => void
+  onSubmit?: (data: any, entryId?: number) => void
   onValidationError?: (errors: Record<string, string>) => void
   containerStyle?: ViewStyle
   primaryColor?: string
@@ -230,7 +230,7 @@ export interface GravityFormProps {
   dateFormat?: string
   timeFormat?: string
   showConfirmationScreen?: boolean
-  customConfirmationAction?: (formData: Record<string, any>) => void
+  customConfirmationAction?: (formData: Record<string, any>, entryId?: number) => void
   showSubmittedAnswers?: boolean
   customSubmittedDataTitle?: string
   submittedDataQuestionStyle?: TextStyle
