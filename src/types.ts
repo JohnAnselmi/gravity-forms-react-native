@@ -82,6 +82,7 @@ export interface GravityFormField {
   checkboxLabel?: string
   enableColumns?: boolean
   maxRows?: number
+  enableOtherChoice?: boolean
 }
 
 export interface GravityFormObject {
