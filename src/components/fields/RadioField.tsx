@@ -67,7 +67,12 @@ const RadioField: React.FC<FieldComponentProps> = (props) => {
       {field.enableOtherChoice && (
         <View>
           <TouchableOpacity
-            onPress={() => value !== "gf_other_choice" && onValueChange!("gf_other_choice")}
+            onPress={() => {
+              if (value !== "") {
+                onValueChange!("")
+                setOtherValue("")
+              }
+            }}
             style={{ flexDirection: "row", alignItems: "center", marginVertical: 5 }}
           >
             <View
@@ -76,24 +81,23 @@ const RadioField: React.FC<FieldComponentProps> = (props) => {
                 width: 20,
                 borderRadius: 10,
                 borderWidth: 2,
-                borderColor: value === "gf_other_choice" || (value && field.choices?.every((choice) => choice.value !== value)) ? primaryColor : "#ccc",
+                borderColor: value === "" || (value && field.choices?.every((choice) => choice.value !== value)) ? primaryColor : "#ccc",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              {(value === "gf_other_choice" || (value && field.choices?.every((choice) => choice.value !== value))) && (
+              {(value === "" || (value && field.choices?.every((choice) => choice.value !== value))) && (
                 <View style={{ height: 10, width: 10, borderRadius: 5, backgroundColor: primaryColor }} />
               )}
             </View>
             <Text style={{ marginLeft: 10, ...inputTextStyle }}>Other</Text>
           </TouchableOpacity>
 
-          {(value === "gf_other_choice" || (value && field.choices?.every((choice) => choice.value !== value))) && (
+          {(value === "" || (value && field.choices?.every((choice) => choice.value !== value))) && (
             <TextInput
               value={otherValue}
               onChangeText={handleOtherValueChange}
               style={{
-                marginLeft: 30,
                 marginTop: 5,
                 padding: 8,
                 borderWidth: 1,
@@ -101,7 +105,7 @@ const RadioField: React.FC<FieldComponentProps> = (props) => {
                 borderRadius: 4,
                 ...inputTextStyle,
               }}
-              placeholder="Enter other value"
+              placeholder="Other"
             />
           )}
         </View>
