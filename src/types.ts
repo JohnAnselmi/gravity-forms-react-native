@@ -157,7 +157,7 @@ export interface UserFriendlySubmissionField {
 export interface GravityFormProps {
   formId: number
   customFieldMapping?: FieldMapping
-  onSubmit?: (data: any, entryId?: number) => void
+  onSubmit?: (userFriendlyData: UserFriendlySubmissionField[], rawFormData: Record<string, any>, entryId?: number) => void
   onValidationError?: (errors: Record<string, string>) => void
   containerStyle?: ViewStyle
   primaryColor?: string
