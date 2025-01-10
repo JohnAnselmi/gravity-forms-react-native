@@ -65,6 +65,8 @@ const GravityForm: React.FC<GravityFormProps> = ({
   customConfirmationComponent,
   customSubmissionOverlayComponent,
   customFieldHandlers = {},
+  onFormDataChange,
+  initialFormData,
 }) => {
   const [form, setForm] = useState<GravityFormObject | null>(null)
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -77,6 +79,75 @@ const GravityForm: React.FC<GravityFormProps> = ({
 
   const apiClient = createApiClient()
   const fieldMapping = useMemo(() => createFieldMapping(customFieldMapping), [customFieldMapping])
+
+  const generateUserFriendlyData = useMemo(
+    () =>
+      (formFields: GravityFormField[], currentFormData: Record<string, any>): UserFriendlySubmissionField[] => {
+        return formFields
+          .filter((field) => {
+            const excludedFieldTypes = ["html", "page", "section", "captcha", "hidden", "fileupload"]
+            return !excludedFieldTypes.includes(field.type) && field.visibility !== "hidden"
+          })
+          .map((field) => {
+            const fieldId = field.id.toString()
+            const value = currentFormData[fieldId]
+            const fieldLabel = field.label
+
+            // Handle custom field types first
+            const customHandler = customFieldHandlers[field.type]
+            if (customHandler) {
+              return {
+                input: `input_${fieldId}`,
+                name: fieldLabel,
+                value: customHandler.formatUserFriendlyValue(value, field),
+              }
+            }
+
+            // Handle standard field types
+            switch (field.type) {
+              case "consent":
+                return {
+                  input: `input_${fieldId}_1`,
+                  name: fieldLabel,
+                  value: value?.checked ? `Consented to: ${value.label}` : "No Answer",
+                }
+
+              case "checkbox":
+              case "radio":
+              case "select":
+              case "multiselect":
+                return {
+                  input: `input_${fieldId}`,
+                  name: fieldLabel,
+                  value: value && value !== "" ? (Array.isArray(value) ? value.join(", ") : value) : "No Answer",
+                }
+
+              case "name":
+              case "address":
+                return {
+                  input: `input_${fieldId}`,
+                  name: fieldLabel,
+                  value: typeof value === "object" && value ? Object.values(value).filter(Boolean).join(" ") : "No Answer",
+                }
+
+              case "date":
+                return {
+                  input: `input_${fieldId}`,
+                  name: fieldLabel,
+                  value: value ? format(parse(value, dateFormat, new Date()), "P") : "No Answer",
+                }
+
+              default:
+                return {
+                  input: `input_${fieldId}`,
+                  name: fieldLabel,
+                  value: value || "No Answer",
+                }
+            }
+          })
+      },
+    [customFieldHandlers, dateFormat]
+  )
 
   useEffect(() => {
     const loadForm = async () => {
@@ -112,7 +183,9 @@ const GravityForm: React.FC<GravityFormProps> = ({
     const initialData: Record<string, any> = {}
     fields.forEach((field) => {
       const fieldId = field.id.toString()
-      if (field.defaultValue) {
+      if (initialFormData?.[fieldId]) {
+        initialData[fieldId] = initialFormData[fieldId]
+      } else if (field.defaultValue) {
         initialData[fieldId] = field.defaultValue
       } else if (field.type === "checkbox" || field.type === "multiselect") {
         initialData[fieldId] = []
@@ -124,7 +197,16 @@ const GravityForm: React.FC<GravityFormProps> = ({
   }
 
   const handleInputChange = (fieldId: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [fieldId]: value }))
+    setFormData((prev) => {
+      const newFormData = { ...prev, [fieldId]: value }
+
+      if (onFormDataChange && form) {
+        const tempUserFriendlyData = generateUserFriendlyData(form.fields, newFormData)
+        onFormDataChange(newFormData, tempUserFriendlyData)
+      }
+
+      return newFormData
+    })
   }
 
   const handleSubmit = async () => {
@@ -134,185 +216,17 @@ const GravityForm: React.FC<GravityFormProps> = ({
     setErrors({})
 
     const formattedData: Record<string, any> = {}
-    const tempUserFriendlyData: UserFriendlySubmissionField[] = []
+    const tempUserFriendlyData = generateUserFriendlyData(form.fields, formData)
 
-    form.fields.forEach((field) => {
-      const fieldId = field.id.toString()
-      const value = formData[fieldId]
-      const fieldLabel = field.label
-      const excludedFieldTypes = ["html", "page", "section", "captcha", "hidden", "fileupload"]
-
-      if (field.visibility === "hidden" || !evaluateConditionalLogic(field) || excludedFieldTypes.includes(field.type)) {
-        return
-      }
-
-      const customHandler = customFieldHandlers[field.type]
-      if (customHandler) {
-        const formattedValue = customHandler.formatValue(value, field)
-
-        if (typeof formattedValue === "object" && formattedValue !== null) {
-          // Handle complex custom fields with sub-fields
-          Object.entries(formattedValue).forEach(([key, val]) => {
-            formattedData[`input_${key}`] = val
-          })
+    // Format data for submission
+    tempUserFriendlyData.forEach((field) => {
+      const [, fieldId, subField] = field.input.match(/input_(\d+)(?:_(\d+))?/) || []
+      if (fieldId) {
+        const value = formData[fieldId]
+        if (subField) {
+          formattedData[`input_${fieldId}_${subField}`] = value?.[subField] || value
         } else {
-          // Handle simple custom fields
-          formattedData[`input_${fieldId}`] = formattedValue
-        }
-
-        tempUserFriendlyData.push({
-          input: `input_${fieldId}`,
-          name: fieldLabel,
-          value: customHandler.formatUserFriendlyValue(value, field),
-        })
-      } else {
-        switch (field.type) {
-          case "consent":
-            formattedData[`input_${fieldId}_1`] = value?.checked || ""
-            formattedData[`input_${fieldId}_2`] = value?.label || ""
-            tempUserFriendlyData.push({
-              input: `input_${fieldId}_1`,
-              name: fieldLabel,
-              value: value?.checked ? `Consented to: ${value.label}` : `No Answer`,
-            })
-            break
-
-          case "checkbox":
-            if (Array.isArray(value)) {
-              field.choices?.forEach((choice, index) => {
-                if (value.includes(choice.value)) {
-                  formattedData[`input_${fieldId}_${index + 1}`] = choice.value
-                }
-              })
-
-              const joinedValues = value.join(", ")
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: joinedValues || "No Answer",
-              })
-            } else if (typeof value === "string") {
-              formattedData[`input_${fieldId}`] = value
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: value,
-              })
-            } else {
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: "No Answer",
-              })
-            }
-            break
-
-          case "radio":
-          case "select":
-          case "multiselect":
-            formattedData[`input_${fieldId}`] = value
-            tempUserFriendlyData.push({
-              input: `input_${fieldId}`,
-              name: fieldLabel,
-              value: value && value !== "" ? (Array.isArray(value) ? value.join(", ") : value) : "No Answer",
-            })
-            break
-
-          case "list":
-            if (Array.isArray(value) && value.length > 0) {
-              if (field.enableColumns && field.choices) {
-                // Multi-column list
-                const columnCount = field.choices.length
-                const rows = []
-                for (let i = 0; i < value.length; i += columnCount) {
-                  const row = value.slice(i, i + columnCount).map((item) => item || "")
-                  rows.push(row)
-                }
-                formattedData[`input_${fieldId}`] = value
-                tempUserFriendlyData.push({
-                  input: `input_${fieldId}`,
-                  name: fieldLabel,
-                  value: rows.map((row) => row.join(", ")).join("\n"),
-                })
-              } else {
-                // Single-column list
-                formattedData[`input_${fieldId}`] = value.map((item) => item || "")
-                tempUserFriendlyData.push({
-                  input: `input_${fieldId}`,
-                  name: fieldLabel,
-                  value: value.map((item) => item || "").join("\n"),
-                })
-              }
-            } else {
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: "No Answer",
-              })
-            }
-            break
-
-          case "name":
-          case "address":
-            if (typeof value === "object" && value !== null) {
-              Object.keys(value).forEach((subFieldId) => {
-                formattedData[`input_${fieldId}_${subFieldId.split(".")[1]}`] = value[subFieldId]
-              })
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: Object.values(value).filter(Boolean).join(" "),
-              })
-            } else {
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: "No Answer",
-              })
-            }
-            break
-
-          case "date":
-            if (value) {
-              const dateValue = format(parse(value, dateFormat, new Date()), "P")
-              formattedData[`input_${fieldId}`] = dateValue
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: dateValue,
-              })
-            } else {
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: "No Answer",
-              })
-            }
-            break
-
-          case "textarea":
-          case "text":
-          case "website":
-          case "number":
-          case "email":
-          case "phone":
-          case "time":
-          default:
-            if (value) {
-              formattedData[`input_${fieldId}`] = value
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: value,
-              })
-            } else {
-              tempUserFriendlyData.push({
-                input: `input_${fieldId}`,
-                name: fieldLabel,
-                value: "No Answer",
-              })
-            }
-            break
+          formattedData[`input_${fieldId}`] = value
         }
       }
     })

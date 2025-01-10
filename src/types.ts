@@ -243,6 +243,8 @@ export interface GravityFormProps {
   }>
   customSubmissionOverlayComponent?: React.ReactNode
   customFieldHandlers?: CustomFieldHandlers
+  onFormDataChange?: (rawFormData: Record<string, any>, userFriendlyData: UserFriendlySubmissionField[]) => void
+  initialFormData?: Record<string, any>
 }
 
 export interface FieldComponentProps {
